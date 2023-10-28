@@ -64,6 +64,16 @@ char const* tuple_get_string(Tuple tuple, size_t index) {
 }
 
 
+bool tuple_match(Tuple t1, Tuple t2) {
+    if (t1.element_count != t2.element_count) return false;
+
+    for (size_t idx = 0; idx < t1.element_count; ++idx) {
+	if (!tuple_element_match(t1.elements[idx], t2.elements[idx])) return false;
+    }
+
+    return true;
+}
+
 bool tuple_element_match(TupleElement e1, TupleElement e2) {
     /* Niezgodne typy. */
     if ((e1.type & ~tuple_element_type_template_bit) != (e2.type & ~tuple_element_type_template_bit)) return false;
@@ -84,18 +94,12 @@ bool tuple_element_match(TupleElement e1, TupleElement e2) {
 
 	case tuple_string:
 	    return !strcmp(e1.data.data_string, e2.data.data_string);
+	
+	default:
+	    __builtin_unreachable();
     }
 }
 
-bool tuple_match(Tuple t1, Tuple t2) {
-    if (t1.element_count != t2.element_count) return false;
-
-    for (size_t idx = 0; idx < t1.element_count; ++idx) {
-	if (!tuple_element_match(t1.elements[idx], t2.elements[idx])) return false;
-    }
-
-    return true;
-}
 
 void tuple_print(Tuple tuple) {
     printf("(");

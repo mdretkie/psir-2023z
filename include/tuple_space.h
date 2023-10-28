@@ -12,18 +12,19 @@ typedef struct TupleSpace {
     size_t tuple_count;
     Tuple* tuples;
     mtx_t tuples_mtx;
+    cnd_t tuples_cnd;
 } TupleSpace;
 
 typedef enum TupleSpaceOperationBlockingMode {
     tuple_space_blocking, tuple_space_nonblocking
 } TupleSpaceOperationBlockingMode;
 
-typedef enum TupleSpaceOperationResultStatus {
+typedef enum TupleSpaceOperationStatus {
     tuple_space_success, tuple_space_failure
-} TupleSpaceOperationResultStatus;
+} TupleSpaceOperationStatus;
 
 typedef struct TupleSpaceOperationResult {
-    TupleSpaceOperationResultStatus status;
+    TupleSpaceOperationStatus status;
     Tuple tuple;
 } TupleSpaceOperationResult;
 
@@ -32,7 +33,11 @@ TupleSpace* tuple_space_new();
 void tuple_space_free(TupleSpace* tuple_space);
 
 void tuple_space_insert(TupleSpace* tuple_space, Tuple tuple);
-TupleSpaceOperationResult tuple_space_remove(TupleSpace* tuple_space, Tuple tuple_template, TupleSpaceOperationBlockingMode blocking_mode);
-TupleSpaceOperationResult tuple_space_read(TupleSpace* tuple_space, Tuple tuple_template, TupleSpaceOperationBlockingMode blocking_mode);
+
+typedef enum TupleSpaceGetPolicy {
+    tuple_space_remove, tuple_space_keep
+} TupleSpaceGetPolicy;
+
+TupleSpaceOperationResult tuple_space_get(TupleSpace* tuple_space, Tuple tuple_template, TupleSpaceOperationBlockingMode blocking_mode, TupleSpaceGetPolicy remove_policy);
 
 #endif

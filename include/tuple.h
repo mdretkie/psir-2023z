@@ -39,8 +39,8 @@ int tuple_get_int(Tuple tuple, size_t index);
 float tuple_get_float(Tuple tuple, size_t index);
 char const* tuple_get_string(Tuple tuple, size_t index);
 
-bool tuple_element_match(TupleElement e1, TupleElement e2);
 bool tuple_match(Tuple t1, Tuple t2);
+bool tuple_element_match(TupleElement e1, TupleElement e2);
 
 void tuple_print(Tuple tuple);
 void tuple_println(Tuple tuple);
