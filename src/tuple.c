@@ -218,31 +218,7 @@ static char* tuple_element_deserialise(char* buffer, TupleElement* element) {
 
 
 char* tuple_serialise(Tuple tuple) {
-    size_t buffer_size = sizeof(tuple.element_count);
-
-    for (size_t idx = 0; idx < tuple.element_count; ++idx) {
-	buffer_size += sizeof(tuple.elements[idx].type);
-
-	if (!(tuple.elements[idx].type & tuple_element_type_template_bit)) {
-	    switch (tuple.elements[idx].type) {
-		case tuple_int: 
-		    buffer_size += sizeof(tuple.elements[idx].data.data_int);
-		    break;
-
-		case tuple_float: 
-		    buffer_size += sizeof(tuple.elements[idx].data.data_float);
-		    break;
-
-		case tuple_string: 
-		    buffer_size += sizeof(uint32_t) + strlen(tuple.elements[idx].data.data_string) + 1;
-		    break;
-
-		default: __builtin_unreachable();
-	    }
-	}
-    }
-
-    char* buffer = malloc(buffer_size);
+    char* buffer = malloc(tuple_serialised_length(tuple));
     char* result_buffer = buffer;
 
     memcpy(buffer, &tuple.element_count, sizeof(tuple.element_count));
@@ -269,6 +245,34 @@ Tuple tuple_deserialise(char* buffer) {
     }
 
     return tuple;
+}
+
+size_t tuple_serialised_length(Tuple tuple) {
+    size_t buffer_size = sizeof(tuple.element_count);
+
+    for (size_t idx = 0; idx < tuple.element_count; ++idx) {
+	buffer_size += sizeof(tuple.elements[idx].type);
+
+	if (!(tuple.elements[idx].type & tuple_element_type_template_bit)) {
+	    switch (tuple.elements[idx].type) {
+		case tuple_int: 
+		    buffer_size += sizeof(tuple.elements[idx].data.data_int);
+		    break;
+
+		case tuple_float: 
+		    buffer_size += sizeof(tuple.elements[idx].data.data_float);
+		    break;
+
+		case tuple_string: 
+		    buffer_size += sizeof(uint32_t) + strlen(tuple.elements[idx].data.data_string) + 1;
+		    break;
+
+		default: __builtin_unreachable();
+	    }
+	}
+    }
+
+    return buffer_size;
 }
 
 

@@ -46,6 +46,7 @@ bool tuple_match(Tuple t1, Tuple t2);
 
 char* tuple_serialise(Tuple tuple);
 Tuple tuple_deserialise(char* buffer);
+size_t tuple_serialised_length(Tuple tuple);
 
 void tuple_print(Tuple tuple);
 void tuple_println(Tuple tuple);

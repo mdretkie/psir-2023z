@@ -25,7 +25,7 @@ void tuple_space_insert(TupleSpace* tuple_space, Tuple tuple) {
     cnd_broadcast(&tuple_space->tuples_cnd);
 }
 
-static Tuple tuple_space_get_helper(TupleSpace* tuple_space, size_t index, TupleSpaceGetPolicy remove_policy) {
+static Tuple tuple_space_get_helper(TupleSpace* tuple_space, size_t index, TupleSpaceOperationRemovePolicy remove_policy) {
     switch (remove_policy) {
 	case tuple_space_remove: {
 	    Tuple result = tuple_space->tuples[index];
@@ -49,7 +49,7 @@ static Tuple tuple_space_get_helper(TupleSpace* tuple_space, size_t index, Tuple
     }
 }
 
-TupleSpaceOperationResult tuple_space_get(TupleSpace* tuple_space, Tuple tuple_template, TupleSpaceOperationBlockingMode blocking_mode, TupleSpaceGetPolicy remove_policy) {
+TupleSpaceOperationResult tuple_space_get(TupleSpace* tuple_space, Tuple tuple_template, TupleSpaceOperationBlockingMode blocking_mode, TupleSpaceOperationRemovePolicy remove_policy) {
     TupleSpaceOperationResult result = {
 	.status = tuple_space_failure
     };
