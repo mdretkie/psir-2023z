@@ -4,6 +4,8 @@
 #include <stdarg.h>
 #include <stddef.h>
 #include <stdbool.h>
+#include <stdint.h>
+#include <stdlib.h>
 
 #define tuple_element_type_template_bit 0x100
 
@@ -19,7 +21,7 @@ typedef enum TupleElementType {
 typedef union TupleElementData {
     int data_int;
     float data_float;
-    char const* data_string;
+    char* data_string;
 } TupleElementData;
 
 typedef struct TupleElement {
@@ -28,11 +30,12 @@ typedef struct TupleElement {
 } TupleElement;
 
 typedef struct Tuple {
-    size_t element_count;
+    uint32_t element_count;
     TupleElement* elements;
 } Tuple;
 
-Tuple tuple_new(size_t element_count, ...);
+/* Stringi są brane na własność, są głęboko kopiowane. */
+Tuple tuple_new(uint32_t element_count, ...);
 void tuple_free(Tuple tuple);
 
 int tuple_get_int(Tuple tuple, size_t index);
@@ -40,7 +43,9 @@ float tuple_get_float(Tuple tuple, size_t index);
 char const* tuple_get_string(Tuple tuple, size_t index);
 
 bool tuple_match(Tuple t1, Tuple t2);
-bool tuple_element_match(TupleElement e1, TupleElement e2);
+
+char* tuple_serialise(Tuple tuple);
+Tuple tuple_deserialise(char* buffer);
 
 void tuple_print(Tuple tuple);
 void tuple_println(Tuple tuple);

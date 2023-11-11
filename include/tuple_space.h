@@ -28,16 +28,15 @@ typedef struct TupleSpaceOperationResult {
     Tuple tuple;
 } TupleSpaceOperationResult;
 
+typedef enum TupleSpaceGetPolicy {
+    tuple_space_remove, tuple_space_keep
+} TupleSpaceGetPolicy;
+
 
 TupleSpace* tuple_space_new();
 void tuple_space_free(TupleSpace* tuple_space);
 
 void tuple_space_insert(TupleSpace* tuple_space, Tuple tuple);
-
-typedef enum TupleSpaceGetPolicy {
-    tuple_space_remove, tuple_space_keep
-} TupleSpaceGetPolicy;
-
 TupleSpaceOperationResult tuple_space_get(TupleSpace* tuple_space, Tuple tuple_template, TupleSpaceOperationBlockingMode blocking_mode, TupleSpaceGetPolicy remove_policy);
 
 #endif
