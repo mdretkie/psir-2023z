@@ -4,6 +4,8 @@
 #include <stdio.h>
 #include <string.h>
 
+// TODO: endianness, error handling
+
 Tuple tuple_new(uint32_t element_count, ...) {
     va_list args;
     va_start(args, element_count);
@@ -147,7 +149,6 @@ void tuple_print(Tuple tuple) {
 
 
 static char* tuple_element_serialise(TupleElement element, char* buffer) {
-    // TODO: errors
     memcpy(buffer, &element.type, sizeof(element.type));
     buffer += sizeof(element.type);
 
