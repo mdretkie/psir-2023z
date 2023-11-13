@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include "tuple_space.h"
 #include "common.h"
+#include "protocol.h"
 
 
 int main() {
@@ -34,14 +35,57 @@ int main() {
         tuple_float_template
     );
 
-    char* buffer = malloc(tuple_serialised_length(t));
-    tuple_serialise(t, buffer);
-    tuple_println(t);
+    {
+	Message message = {
+	    .id = message_next_id(),
+	    .type = message_ack,
+	    .data.ack.message_id = message_next_id()
+	};
+	message_println(message);
+    }
+    {
+	Message message = {
+	    .id = message_next_id(),
+	    .type = message_tuple_space_insert_request,
+	    .data.tuple_space_insert_request.tuple = t
+	};
+	message_println(message);
+    }
+    {
+	Message message = {
+	    .id = message_next_id(),
+	    .type = message_tuple_space_get_request,
+	    .data.tuple_space_get_request.tuple_template = t
+	};
+	message_println(message);
+    }
+    {
+	Message message = {
+	    .id = message_next_id(),
+	    .type = message_tuple_space_get_reply,
+	    .data.tuple_space_get_reply.result.tuple = t
+	};
+	message_println(message);
+    }
+
+    {
+	Message message = {
+	    .id = message_next_id(),
+	    .type = 1234
+	};
+	message_println(message);
+    }
+
     tuple_free(t);
-    Tuple tt;
-    tuple_deserialise(&tt, buffer);
-    free(buffer);
-    tuple_println(tt);
-    tuple_free(tt);
+
+    //char* buffer = malloc(tuple_serialised_length(t));
+    //tuple_serialise(t, buffer);
+    //tuple_println(t);
+    //tuple_free(t);
+    //Tuple tt;
+    //tuple_deserialise(&tt, buffer);
+    //free(buffer);
+    //tuple_println(tt);
+    //tuple_free(tt);
 
 }

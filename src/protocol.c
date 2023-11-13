@@ -1,9 +1,10 @@
 #include "protocol.h"
+#include <stdio.h>
 #include <string.h>
 #include <stdatomic.h>
 
 
-uint32_t next_message_id() {
+uint32_t message_next_id() {
     static atomic_uint_least32_t id = 0;
     return atomic_fetch_add_explicit(&id, 1, memory_order_relaxed);
 }
@@ -122,4 +123,46 @@ size_t message_serialised_length(Message message) {
     }
 
     return size;
+}
+
+void message_println(Message message) {
+    char const* type_name =
+	message.type == message_ack ? "ACK": 
+	message.type == message_tuple_space_insert_request ? "TUPLE SPACE INSERT REQUEST":
+	message.type == message_tuple_space_get_request ? "TUPLE SPACE GET REQUEST":
+	message.type == message_tuple_space_get_reply ? "TUPLE SPACE GET REPLY": 
+	"INVALID";
+
+
+    printf("Message {\n    id: %u\n    type: %s\n    data: {\n", message.id, type_name);
+
+    switch (message.type) {
+	case message_ack: 
+	    printf("        message_id: %u\n", message.data.ack.message_id); 
+	    break;
+
+	case message_tuple_space_insert_request:
+	    printf("        tuple: ");
+	    tuple_println(message.data.tuple_space_insert_request.tuple);
+	    break;
+
+	case message_tuple_space_get_request:
+	    printf("        tuple_template: ");
+	    tuple_println(message.data.tuple_space_get_request.tuple_template);
+	    printf("        blocking_mode: %d\n", message.data.tuple_space_get_request.blocking_mode);
+	    printf("        remove_policy: %d\n", message.data.tuple_space_get_request.remove_policy);
+	    break;
+
+	case message_tuple_space_get_reply:
+	    printf("        result.status: %d\n", message.data.tuple_space_get_reply.result.status);
+	    printf("        result.tuple: ");
+	    tuple_println(message.data.tuple_space_get_reply.result.tuple);
+	    break;
+
+	default: 
+	    printf("        INVALID\n");
+	    break;
+    }
+
+    printf("    }\n}\n");
 }
