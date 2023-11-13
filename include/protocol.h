@@ -4,31 +4,36 @@
 #include <stdint.h>
 #include "tuple.h"
 
-/*
 typedef enum MessageType {
     message_ack,
-    message_tuple_space_insert,
-    message_tuple_space_get,
+    message_tuple_space_insert_request,
+    message_tuple_space_get_request,
+    message_tuple_space_get_reply,
 } MessageType;
 
 typedef struct MessageAck {
     uint32_t message_id;
 } MessageAck;
 
-typedef struct MessageTupleSpaceInsert {
+typedef struct MessageTupleSpaceInsertRequest {
     Tuple tuple;
-} MessageTupleSpaceInsert;
+} MessageTupleSpaceInsertRequest;
 
-typedef struct MessageTupleSpaceGet {
+typedef struct MessageTupleSpaceGetRequest {
     Tuple tuple_template;
     TupleSpaceOperationBlockingMode blocking_mode; 
-    TupleSpaceGetPolicy remove_policy;
-} MessageTupleSpaceGet;
+    TupleSpaceOperationRemovePolicy remove_policy;
+} MessageTupleSpaceGetRequest;
+
+typedef struct MessageTupleSpaceGetReply {
+    TupleSpaceOperationResult result;
+} MessageTupleSpaceGetReply;
 
 typedef union MessageData {
     MessageAck ack;
-    MessageTupleSpaceInsert tuple_space_insert;
-    MessageTupleSpaceGet tuple_space_get;
+    MessageTupleSpaceInsertRequest tuple_space_insert_request;
+    MessageTupleSpaceGetRequest tuple_space_get_request;
+    MessageTupleSpaceGetReply tuple_space_get_reply;
 } MessageData;
 
 typedef struct Message {
@@ -37,6 +42,5 @@ typedef struct Message {
     uint32_t data_length;
     MessageData data;
 } Message;
-*/
 
 #endif

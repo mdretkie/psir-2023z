@@ -182,7 +182,7 @@ static char* tuple_element_serialise(TupleElement element, char* buffer) {
 }
 
 
-static char* tuple_element_deserialise(char* buffer, TupleElement* element) {
+static char const* tuple_element_deserialise(char const* buffer, TupleElement* element) {
     memcpy(&element->type, buffer, sizeof(element->type));
     buffer += sizeof(element->type);
 
@@ -217,10 +217,7 @@ static char* tuple_element_deserialise(char* buffer, TupleElement* element) {
 }
 
 
-char* tuple_serialise(Tuple tuple) {
-    char* buffer = malloc(tuple_serialised_length(tuple));
-    char* result_buffer = buffer;
-
+char* tuple_serialise(Tuple tuple, char* buffer) {
     memcpy(buffer, &tuple.element_count, sizeof(tuple.element_count));
     buffer += sizeof(tuple.element_count);
 
@@ -228,23 +225,21 @@ char* tuple_serialise(Tuple tuple) {
 	buffer = tuple_element_serialise(tuple.elements[idx], buffer);
     }
 
-    return result_buffer;
+    return buffer;
 }
 
 
-Tuple tuple_deserialise(char* buffer) {
-    Tuple tuple;
+char const* tuple_deserialise(char const* buffer, Tuple* tuple) {
+    memcpy(&tuple->element_count, buffer, sizeof(tuple->element_count));
+    buffer += sizeof(tuple->element_count);
 
-    memcpy(&tuple.element_count, buffer, sizeof(tuple.element_count));
-    buffer += sizeof(tuple.element_count);
+    tuple->elements = malloc(tuple->element_count * sizeof(TupleElement));
 
-    tuple.elements = malloc(tuple.element_count * sizeof(TupleElement));
-
-    for (size_t idx = 0; idx < tuple.element_count; ++idx) {
-	buffer = tuple_element_deserialise(buffer, &tuple.elements[idx]);
+    for (size_t idx = 0; idx < tuple->element_count; ++idx) {
+	buffer = tuple_element_deserialise(buffer, &tuple->elements[idx]);
     }
 
-    return tuple;
+    return buffer;
 }
 
 size_t tuple_serialised_length(Tuple tuple) {

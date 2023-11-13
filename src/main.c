@@ -33,10 +33,13 @@ int main() {
         tuple_string_template,
         tuple_float_template
     );
-    char* buffer = tuple_serialise(t);
+
+    char* buffer = malloc(tuple_serialised_length(t));
+    tuple_serialise(t, buffer);
     tuple_println(t);
     tuple_free(t);
-    Tuple tt = tuple_deserialise(buffer);
+    Tuple tt;
+    tuple_deserialise(buffer, &tt);
     free(buffer);
     tuple_println(tt);
     tuple_free(tt);

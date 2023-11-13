@@ -44,8 +44,8 @@ char const* tuple_get_string(Tuple tuple, size_t index);
 
 bool tuple_match(Tuple t1, Tuple t2);
 
-char* tuple_serialise(Tuple tuple);
-Tuple tuple_deserialise(char* buffer);
+char* tuple_serialise(Tuple tuple, char* buffer);
+char const* tuple_deserialise(char const* buffer, Tuple* tuple);
 size_t tuple_serialised_length(Tuple tuple);
 
 void tuple_print(Tuple tuple);
