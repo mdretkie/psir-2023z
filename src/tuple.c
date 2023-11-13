@@ -182,7 +182,7 @@ static char* tuple_element_serialise(TupleElement element, char* buffer) {
 }
 
 
-static char const* tuple_element_deserialise(char const* buffer, TupleElement* element) {
+static char const* tuple_element_deserialise(TupleElement* element, char const* buffer) {
     memcpy(&element->type, buffer, sizeof(element->type));
     buffer += sizeof(element->type);
 
@@ -229,14 +229,14 @@ char* tuple_serialise(Tuple tuple, char* buffer) {
 }
 
 
-char const* tuple_deserialise(char const* buffer, Tuple* tuple) {
+char const* tuple_deserialise(Tuple* tuple, char const* buffer) {
     memcpy(&tuple->element_count, buffer, sizeof(tuple->element_count));
     buffer += sizeof(tuple->element_count);
 
     tuple->elements = malloc(tuple->element_count * sizeof(TupleElement));
 
     for (size_t idx = 0; idx < tuple->element_count; ++idx) {
-	buffer = tuple_element_deserialise(buffer, &tuple->elements[idx]);
+	buffer = tuple_element_deserialise(&tuple->elements[idx], buffer);
     }
 
     return buffer;

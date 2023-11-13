@@ -39,7 +39,7 @@ int main() {
     tuple_println(t);
     tuple_free(t);
     Tuple tt;
-    tuple_deserialise(buffer, &tt);
+    tuple_deserialise(&tt, buffer);
     free(buffer);
     tuple_println(tt);
     tuple_free(tt);
