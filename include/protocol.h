@@ -3,6 +3,7 @@
 
 #include <stdint.h>
 #include "tuple.h"
+#include "tuple_space.h"
 
 typedef enum MessageType {
     message_ack,
@@ -39,8 +40,13 @@ typedef union MessageData {
 typedef struct Message {
     uint32_t id;
     MessageType type;
-    uint32_t data_length;
     MessageData data;
 } Message;
+
+uint32_t next_message_id();
+char* message_serialise_and_free(Message message);
+Message message_deserialise_and_free(char* buffer);
+size_t message_serialised_length(Message message);
+
 
 #endif
