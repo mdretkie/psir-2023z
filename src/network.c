@@ -41,6 +41,7 @@ static void sendto_all(int so, char* buffer, size_t buffer_size, struct sockaddr
 static void send_and_free_message_no_ack(OutboundMessage message, int so) {
     uint32_t bytes_length = message_serialised_length(message.message);
     char* bytes = message_serialise_and_free(message.message);
+    printf("DEBUG sending first byte %d\n", (int)bytes[0]);
     sendto_all(so, (char*)&bytes_length, sizeof(bytes_length), *(struct sockaddr_in*)(&message.receiver_address));
     sendto_all(so, bytes, bytes_length, *(struct sockaddr_in*)(&message.receiver_address));
     free(bytes);
@@ -55,8 +56,10 @@ static InboundMessage receive_message_blocking_no_ack(int so) {
 
     char* bytes = malloc(bytes_length);
     recvfrom_all(so, bytes, bytes_length, NULL, NULL);
+    printf("DEBUG receiving first byte %d\n", (int)bytes[0]);
 
     Message message = message_deserialise_and_free(bytes);
+
 
     InboundMessage inbound_message = {
         .message = message, 
