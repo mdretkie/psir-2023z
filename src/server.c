@@ -4,6 +4,50 @@
 #include "tuple_space.h"
 #include "network.h"
 
+
+void handle_inbound_message(int so, InboundMessage inbound_message, TupleSpace* tuple_space) {
+    switch (inbound_message.message.type) {
+        case message_ack: 
+        case message_tuple_space_get_reply:
+            printf("%s Error: unexpected inbound message type\n", formatted_timestamp());
+            break;
+
+        case message_tuple_space_insert_request:
+            tuple_space_insert(tuple_space, inbound_message.message.data.tuple_space_insert_request.tuple);
+            break;
+
+        case message_tuple_space_get_request:
+            (void)0;
+            TupleSpaceOperationResult result = tuple_space_get(
+                tuple_space, 
+                inbound_message.message.data.tuple_space_get_request.tuple_template, 
+                inbound_message.message.data.tuple_space_get_request.blocking_mode, 
+                inbound_message.message.data.tuple_space_get_request.remove_policy
+            );
+
+            Message message = {
+                .id = message_next_id(),
+                .type = message_tuple_space_get_reply,
+                .data = {
+                    .tuple_space_get_reply = {
+                        .result = result,
+                    },
+                },
+            };
+
+            OutboundMessage outbound_message = {
+                .message = message,
+                .receiver_address = inbound_message.sender_address,
+            };
+
+            if (send_and_free_message(outbound_message, so) == ack_lost) {
+                printf("%s Error: ACK lost\n", formatted_timestamp());
+            }
+            break;
+    }
+}
+
+
 void server_main() {
     printf("%s Server started\n", formatted_timestamp());
 
@@ -28,8 +72,11 @@ void server_main() {
 
     for(;;) {
         InboundMessage inbound_message = receive_message_blocking(so);
+
         printf("%s Received message from %s:\n", formatted_timestamp(), address_to_text(*(struct sockaddr_in*)(&inbound_message.sender_address)));
         message_println(inbound_message.message);
+
+        handle_inbound_message(so, inbound_message, &tuple_space);
     }
 
     tuple_space_free(tuple_space);
