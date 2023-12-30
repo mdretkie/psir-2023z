@@ -17,7 +17,11 @@ typedef struct OutboundMessage {
     struct sockaddr receiver_address;
 } OutboundMessage;
 
-void send_and_free_message(OutboundMessage message, int so);
+typedef enum AckStatus {
+    ack_received, ack_lost,
+} AckStatus;
+
+AckStatus send_and_free_message(OutboundMessage message, int so);
 InboundMessage receive_message_blocking(int so);
 
 

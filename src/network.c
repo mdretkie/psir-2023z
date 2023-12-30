@@ -88,20 +88,20 @@ static void ack(int so, InboundMessage inbound_message) {
     send_and_free_message_no_ack(outbound_message, so);
 }
 
-static void receive_ack(int so, OutboundMessage outbound_message) {
+static AckStatus receive_ack(int so, OutboundMessage outbound_message) {
     InboundMessage inbound_message = receive_message_blocking_no_ack(so);
     if (inbound_message.message.type == message_ack && inbound_message.message.data.ack.message_id == outbound_message.message.id) {
-        puts("Ack received");
+        return ack_received;
     } else {
-        puts("Ack lost");
+        return ack_lost;
     }
 }
 
 
 
-void send_and_free_message(OutboundMessage message, int so) {
+AckStatus send_and_free_message(OutboundMessage message, int so) {
     send_and_free_message_no_ack(message, so);
-    receive_ack(so, message);
+    return receive_ack(so, message);
 }
 
 
