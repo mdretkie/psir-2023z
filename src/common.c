@@ -19,7 +19,6 @@ char const* formatted_timestamp() {
     clock_gettime(CLOCK_MONOTONIC_RAW, &now);
     long long int now_ = now.tv_sec * 1000 + now.tv_nsec / 1000000;
     snprintf(buffer, sizeof(buffer), "[%lld]", now_);
-    snprintf(buffer, sizeof(buffer), "[%lld]", 0llu);
 
     return buffer;
 }

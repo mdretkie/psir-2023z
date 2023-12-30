@@ -73,8 +73,8 @@ void server_main() {
     for(;;) {
         InboundMessage inbound_message = receive_message_blocking(so);
 
-        printf("%s Received message from %s:\n", formatted_timestamp(), address_to_text(*(struct sockaddr_in*)(&inbound_message.sender_address)));
-        message_println(inbound_message.message);
+        //printf("%s Received message from %s:\n", formatted_timestamp(), address_to_text(*(struct sockaddr_in*)(&inbound_message.sender_address)));
+        //message_println(inbound_message.message);
 
         handle_inbound_message(so, inbound_message, &tuple_space);
     }

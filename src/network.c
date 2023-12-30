@@ -39,7 +39,7 @@ static void sendto_all(int so, char* buffer, size_t buffer_size, struct sockaddr
 
 
 static void send_and_free_message_no_ack(OutboundMessage message, int so) {
-    size_t bytes_length = message_serialised_length(message.message);
+    uint32_t bytes_length = message_serialised_length(message.message);
     char* bytes = message_serialise_and_free(message.message);
     sendto_all(so, (char*)&bytes_length, sizeof(bytes_length), *(struct sockaddr_in*)(&message.receiver_address));
     sendto_all(so, bytes, bytes_length, *(struct sockaddr_in*)(&message.receiver_address));
@@ -47,14 +47,14 @@ static void send_and_free_message_no_ack(OutboundMessage message, int so) {
 }
 
 static InboundMessage receive_message_blocking_no_ack(int so) {
-    size_t bytes_length = 0;
+    uint32_t bytes_length = 0;
     struct sockaddr sender_address;
-    socklen_t sender_address_length;
+    socklen_t sender_address_length = sizeof(sender_address);
 
     recvfrom_all(so, (char*)&bytes_length, sizeof(bytes_length), &sender_address, &sender_address_length);
 
     char* bytes = malloc(bytes_length);
-    recvfrom_all(so, bytes, bytes_length, &sender_address, &sender_address_length);
+    recvfrom_all(so, bytes, bytes_length, NULL, NULL);
 
     Message message = message_deserialise_and_free(bytes);
 
@@ -101,12 +101,13 @@ static AckStatus receive_ack(int so, OutboundMessage outbound_message) {
 
 AckStatus send_and_free_message(OutboundMessage message, int so) {
     send_and_free_message_no_ack(message, so);
-    return receive_ack(so, message);
+    //return receive_ack(so, message);
+    return ack_received;
 }
 
 
 InboundMessage receive_message_blocking(int so) {
     InboundMessage inbound_message = receive_message_blocking_no_ack(so);
-    ack(so, inbound_message);
+    //ack(so, inbound_message);
     return inbound_message;
 }

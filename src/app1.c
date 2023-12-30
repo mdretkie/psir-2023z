@@ -118,7 +118,8 @@ MasterResult master_query_result(MasterArgs args, char const* query) {
 
 
 int master_fn(void* args_) {
-    MasterArgs args = *(MasterArgs*)(&args_);
+    return 0;
+    MasterArgs args = *(MasterArgs*)(args_);
 
     printf("%s [M]  Master starting\n", formatted_timestamp());
 
@@ -165,9 +166,10 @@ typedef struct WorkerArgs {
 } WorkerArgs;
 
 int worker_fn(void* args_) {
-    WorkerArgs args = *(WorkerArgs*)(&args_);
+    WorkerArgs args = *(WorkerArgs*)(args_);
 
     printf("%s [W%d] Worker %d starting\n", formatted_timestamp(), args.worker_id, args.worker_id);
+
 
     for(;;) {
         Tuple tuple_template = 
@@ -279,15 +281,15 @@ void app1_main() {
 
     int worker_count = 8;
     thrd_t* worker_thrds = malloc(worker_count * sizeof(thrd_t));
+
+    WorkerArgs* worker_args = malloc(worker_count * sizeof(WorkerArgs));
     
     for (int i = 0; i < worker_count; ++i) {
-        WorkerArgs worker_args = {
-            .worker_id = i,
-            .server_socket = server_socket,
-            .server_address = server_address,
-        };
+        worker_args[i].worker_id = i;
+        worker_args[i].server_socket = server_socket;
+        worker_args[i].server_address = server_address;
 
-        if (thrd_create(&worker_thrds[i], worker_fn, &worker_args) != thrd_success) {
+        if (thrd_create(&worker_thrds[i], worker_fn, &worker_args[i]) != thrd_success) {
             printf("Could not create worker thread\n");
             exit(EXIT_FAILURE);
         }
@@ -306,6 +308,7 @@ void app1_main() {
         exit(EXIT_FAILURE);
     }
 
+    free(worker_args);
     free(worker_thrds);
 
     printf("%s App 1 finished\n", formatted_timestamp());
