@@ -6,13 +6,13 @@
 #include "protocol.h"
 
 
-typedef struct Args {
+typedef struct MasterArgs {
     int server_socket;
     struct sockaddr server_address;
-} Args;
+} MasterArgs;
 
 
-void master_create_task(Args args, int i) {
+void master_create_task(MasterArgs args, int i) {
     Tuple tuple = 
         tuple_new(
             2,
@@ -48,7 +48,7 @@ typedef struct MasterResult {
 } MasterResult;
 
 
-MasterResult master_query_result(Args args, char const* query) {
+MasterResult master_query_result(MasterArgs args, char const* query) {
     Tuple tuple_template = 
         tuple_new(
             2,
@@ -104,7 +104,7 @@ MasterResult master_query_result(Args args, char const* query) {
 
 
 void master_fn(void* args_) {
-    Args args = *(Args*)(&args_);
+    MasterArgs args = *(MasterArgs*)(&args_);
 
     int n = 32;
 
@@ -115,23 +115,66 @@ void master_fn(void* args_) {
 
     printf("%s [M]  Collecting results\n", formatted_timestamp());
 
-    bool* results = malloc(n * sizeof(MasterResult));
-    bzero(results, n * sizeof(MasterResult));
-
     int result_count = 0;
 
     while (result_count != n) {
-        for (int i = 0; i < n; ++i) {
-            if 
-        master_query_result(args, i
-    }
+        MasterResult result = master_query_result(args, "prime");
 
-    free(reply_received);
+        if (result.retrieved) {
+            result_count += 1;
+            printf("%s [M]  Result %d/%d: %d is prime\n", formatted_timestamp(), result_count, n, result.i);
+        } else {
+            MasterResult result = master_query_result(args, "not prime");
+
+            if (result.retrieved) {
+                result_count += 1;
+                printf("%s [M]  Result %d/%d: %d is not prime\n", formatted_timestamp(), result_count, n, result.i);
+            } else {
+                continue;
+            }
+        }
+    }
 }
 
 
+typedef struct WorkerArgs {
+    int worker_id;
+    int server_socket;
+    struct sockaddr server_address;
+} WorkerArgs;
+
 void worker_fn(void* args_) {
-    Args args = *(Args*)(&args_);
+    WorkerArgs args = *(WorkerArgs*)(&args_);
+
+    Tuple tuple_template = 
+        tuple_new(
+            2,
+            tuple_string, "is prime",
+            tuple_int_template
+        );
+    
+    Message message = {
+        .id = message_next_id(),
+        .type = message_tuple_space_get_request,
+        .data = {
+            .tuple_space_get_request = {
+                .tuple_template = tuple_template,
+                .blocking_mode = tuple_space_blocking,
+                .remove_policy = tuple_space_remove,
+            },
+        },
+    };
+
+    OutboundMessage outbound_message = {
+        .message = message,
+        .receiver_address = args.server_address,
+    };
+
+    if (send_and_free_message(outbound_message, args.server_socket) == ack_lost) {
+        printf("%s [W%d] Error: ACK lost\n", formatted_timestamp(), args.worker_id);
+    }
+
+
 
 }
 
