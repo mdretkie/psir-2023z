@@ -27,8 +27,7 @@ char const* formatted_timestamp() {
 char const* address_to_text(struct sockaddr_in address) {
     static thread_local char buffer[256];
 
-    struct in_addr sin_addr = address.sin_addr;
-    snprintf(buffer, sizeof(buffer), "%s", inet_ntoa(sin_addr));
+    snprintf(buffer, sizeof(buffer), "%s:%d", inet_ntoa(address.sin_addr), address.sin_port);
 
     return buffer;
 }

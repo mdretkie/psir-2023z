@@ -29,6 +29,7 @@ void server_main() {
     for(;;) {
         InboundMessage inbound_message = receive_message_blocking(so);
         printf("%s Received message from %s:\n", formatted_timestamp(), address_to_text(*(struct sockaddr_in*)(&inbound_message.sender_address)));
+        message_println(inbound_message.message);
     }
 
     tuple_space_free(tuple_space);
