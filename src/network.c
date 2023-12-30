@@ -1,9 +1,9 @@
-/*
 #include <stdio.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <sys/socket.h>
 #include <stdlib.h>
+#include "network.h"
 
 
 static void recvfrom_all(int so, char* buffer, size_t buffer_size, struct sockaddr* sender_address, socklen_t* sender_address_length) {
@@ -35,4 +35,29 @@ static void sendto_all(int so, char* buffer, size_t buffer_size, struct sockaddr
 }
 
 
-*/
+void send_and_free_message(OutboundMessage message, int so) {
+    size_t bytes_length = message_serialised_length(message.message);
+    char* bytes = message_serialise_and_free(message.message);
+    sendto_all(so, (char*)&bytes_length, sizeof(bytes_length), message.receiver_address);
+    sendto_all(so, bytes, bytes_length, message.receiver_address);
+}
+
+InboundMessage receive_message_blocking(int so) {
+    size_t bytes_length = 0;
+    struct sockaddr sender_address;
+    socklen_t sender_address_length;
+
+    recvfrom_all(so, (char*)&bytes_length, sizeof(bytes_length), &sender_address, &sender_address_length);
+
+    char* bytes = malloc(bytes_length);
+    recvfrom_all(so, bytes, bytes_length, &sender_address, &sender_address_length);
+
+    Message message = message_deserialise_and_free(bytes);
+
+    InboundMessage inbound_message = {
+        .message = message, 
+        .sender_address = sender_address
+    };
+
+    return inbound_message;
+}

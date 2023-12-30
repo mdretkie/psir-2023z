@@ -1,19 +1,19 @@
 #include "tuple_space.h"
 #include <stdlib.h>
 
-TupleSpace* tuple_space_new() {
-    TupleSpace* tuple_space = malloc(sizeof(TupleSpace));
-    tuple_space->tuple_count = 0;
-    tuple_space->tuples = NULL;
-    mtx_init(&tuple_space->tuples_mtx, mtx_plain);
-    cnd_init(&tuple_space->tuples_cnd);
+TupleSpace tuple_space_new() {
+    TupleSpace tuple_space;
+    tuple_space.tuple_count = 0;
+    tuple_space.tuples = NULL;
+    mtx_init(&tuple_space.tuples_mtx, mtx_plain);
+    cnd_init(&tuple_space.tuples_cnd);
     return tuple_space;
 }
 
-void tuple_space_free(TupleSpace* tuple_space) {
-    cnd_destroy(&tuple_space->tuples_cnd);
-    mtx_destroy(&tuple_space->tuples_mtx);
-    free(tuple_space->tuples);
+void tuple_space_free(TupleSpace tuple_space) {
+    cnd_destroy(&tuple_space.tuples_cnd);
+    mtx_destroy(&tuple_space.tuples_mtx);
+    free(tuple_space.tuples);
 }
 
 void tuple_space_insert(TupleSpace* tuple_space, Tuple tuple) {

@@ -3,7 +3,12 @@
 
 #include <string.h>
 #include <stdlib.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
+#include <sys/socket.h>
 
 char* alloc_string(char const* string);
+char const* formatted_timestamp();
+char const* address_to_text(struct sockaddr_in address);
 
 #endif

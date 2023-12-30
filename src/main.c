@@ -1,10 +1,33 @@
+/*
 #include <stdio.h>
 #include "tuple_space.h"
 #include "common.h"
 #include "protocol.h"
+*/
+#include "server.h"
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 
 
-int main() {
+int main(int argc, char** argv) {
+    if (argc != 2) {
+        printf("Invalid arguments\n");
+        exit(EXIT_FAILURE);
+    }
+
+    if (!strcmp(argv[1], "server")) {
+        server_main();
+    } else if (!strcmp(argv[1], "client")) {
+        //client_main();
+    } else {
+        printf("Invalid arguments\n");
+        exit(EXIT_FAILURE);
+    }
+
+    return EXIT_SUCCESS;
+
+
     /*
     Tuple t1 = tuple_new(
 	    2,
@@ -25,6 +48,7 @@ int main() {
     tuple_free(t2);
     */
 
+    /*
     Tuple t = tuple_new(
         6,
         tuple_int, 5,
@@ -87,5 +111,6 @@ int main() {
     //free(buffer);
     //tuple_println(tt);
     //tuple_free(tt);
+    */
 
 }
