@@ -12,6 +12,20 @@ typedef struct MasterArgs {
 } MasterArgs;
 
 
+// https://stackoverflow.com/a/5281794/16766872
+bool is_prime(int num)
+{
+     if (num <= 1) return 0;
+     if (num % 2 == 0 && num > 2) return 0;
+     for(int i = 3; i < num / 2; i+= 2)
+     {
+         if (num % i == 0)
+             return 0;
+     }
+     return 1;
+}
+
+
 void master_create_task(MasterArgs args, int i) {
     Tuple tuple = 
         tuple_new(
@@ -103,8 +117,10 @@ MasterResult master_query_result(MasterArgs args, char const* query) {
 }
 
 
-void master_fn(void* args_) {
+int master_fn(void* args_) {
     MasterArgs args = *(MasterArgs*)(&args_);
+
+    printf("%s [M]  Master starting\n", formatted_timestamp());
 
     int n = 32;
 
@@ -134,7 +150,12 @@ void master_fn(void* args_) {
             }
         }
     }
+
+    printf("%s [M]  Master finished\n", formatted_timestamp());
+
+    return 0;
 }
+
 
 
 typedef struct WorkerArgs {
@@ -143,43 +164,93 @@ typedef struct WorkerArgs {
     struct sockaddr server_address;
 } WorkerArgs;
 
-void worker_fn(void* args_) {
+int worker_fn(void* args_) {
     WorkerArgs args = *(WorkerArgs*)(&args_);
 
-    Tuple tuple_template = 
-        tuple_new(
-            2,
-            tuple_string, "is prime",
-            tuple_int_template
-        );
-    
-    Message message = {
-        .id = message_next_id(),
-        .type = message_tuple_space_get_request,
-        .data = {
-            .tuple_space_get_request = {
-                .tuple_template = tuple_template,
-                .blocking_mode = tuple_space_blocking,
-                .remove_policy = tuple_space_remove,
+    printf("%s [W%d] Worker %d starting\n", formatted_timestamp(), args.worker_id, args.worker_id);
+
+    for(;;) {
+        Tuple tuple_template = 
+            tuple_new(
+                2,
+                tuple_string, "is prime",
+                tuple_int_template
+            );
+        
+        Message message = {
+            .id = message_next_id(),
+            .type = message_tuple_space_get_request,
+            .data = {
+                .tuple_space_get_request = {
+                    .tuple_template = tuple_template,
+                    .blocking_mode = tuple_space_blocking,
+                    .remove_policy = tuple_space_remove,
+                },
             },
-        },
-    };
+        };
 
-    OutboundMessage outbound_message = {
-        .message = message,
-        .receiver_address = args.server_address,
-    };
+        OutboundMessage outbound_message = {
+            .message = message,
+            .receiver_address = args.server_address,
+        };
 
-    if (send_and_free_message(outbound_message, args.server_socket) == ack_lost) {
-        printf("%s [W%d] Error: ACK lost\n", formatted_timestamp(), args.worker_id);
+        if (send_and_free_message(outbound_message, args.server_socket) == ack_lost) {
+            printf("%s [W%d] Error: ACK lost\n", formatted_timestamp(), args.worker_id);
+        }
+
+        InboundMessage inbound_message = receive_message_blocking(args.server_socket);
+        if (inbound_message.message.type != message_tuple_space_get_reply) {
+            printf("%s [W%d] Error: expected MessageTupleSpaceGetReply\n", formatted_timestamp(), args.worker_id);
+            continue;
+        }
+
+        int i = tuple_get_int(inbound_message.message.data.tuple_space_get_reply.result.tuple, 1);
+
+        printf("%s [W%d] Processing request for n = %d\n", formatted_timestamp(), args.worker_id, i);
+
+        bool is_prime_result = is_prime(i);
+        int sleep_time = random_in_range(100, 1000);
+        sleep_ms(sleep_time);
+
+        printf("%s [W%d] Finished processing request for n = %d after %d ms\n", formatted_timestamp(), args.worker_id, i, sleep_time);
+
+
+        Tuple tuple = 
+            tuple_new(
+                2,
+                tuple_string, is_prime_result ? "prime" : "not prime",
+                tuple_int, i
+            );
+
+        Message message2 = {
+            .id = message_next_id(),
+            .type = message_tuple_space_insert_request,
+            .data = {
+                .tuple_space_insert_request = {
+                    .tuple = tuple,
+                },
+            },
+        };
+
+        OutboundMessage outbound_message2 = {
+            .message = message2,
+            .receiver_address = args.server_address,
+        };
+
+        if (send_and_free_message(outbound_message2, args.server_socket) != ack_received) {
+            printf("%s [W%d] Error: ACK lost\n", formatted_timestamp(), args.worker_id);
+        }
     }
 
+    printf("%s [W%d] Worker %d finished\n", formatted_timestamp(), args.worker_id, args.worker_id);
 
-
+    return 0;
 }
 
 
 void app1_main() {
+    printf("%s App 1 starting\n", formatted_timestamp());
+
     struct in_addr server_address_;
     if (inet_pton(AF_INET, "127.0.0.1", &server_address_) == 0) {
 	perror("in main(): inet_aton() error");
@@ -194,9 +265,48 @@ void app1_main() {
 
     int server_socket = socket(AF_INET, SOCK_DGRAM, 0);
 
-    Args args = {
+    MasterArgs master_args = {
         .server_socket = server_socket,
         .server_address = server_address,
     };
 
+    thrd_t master_thrd;
+    if (thrd_create(&master_thrd, master_fn, &master_args) != thrd_success) {
+        printf("Could not create master thread\n");
+        exit(EXIT_FAILURE);
+    }
+
+
+    int worker_count = 8;
+    thrd_t* worker_thrds = malloc(worker_count * sizeof(thrd_t));
+    
+    for (int i = 0; i < worker_count; ++i) {
+        WorkerArgs worker_args = {
+            .worker_id = i,
+            .server_socket = server_socket,
+            .server_address = server_address,
+        };
+
+        if (thrd_create(&worker_thrds[i], worker_fn, &worker_args) != thrd_success) {
+            printf("Could not create worker thread\n");
+            exit(EXIT_FAILURE);
+        }
+    }
+
+    for (int i = 0; i < worker_count; ++i) {
+        if (thrd_join(worker_thrds[i], NULL) != thrd_success) {
+            printf("Could not join with worker thread\n");
+            exit(EXIT_FAILURE);
+        }
+
+    }
+
+    if (thrd_join(master_thrd, NULL) != thrd_success) {
+        printf("Could not join with master thread\n");
+        exit(EXIT_FAILURE);
+    }
+
+    free(worker_thrds);
+
+    printf("%s App 1 finished\n", formatted_timestamp());
 }
