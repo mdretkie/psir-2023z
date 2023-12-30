@@ -14,7 +14,7 @@ typedef struct InboundMessage {
 
 typedef struct OutboundMessage {
     Message message;
-    struct sockaddr_in receiver_address;
+    struct sockaddr receiver_address;
 } OutboundMessage;
 
 void send_and_free_message(OutboundMessage message, int so);

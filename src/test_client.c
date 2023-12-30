@@ -16,11 +16,11 @@ void test_client_main() {
 	exit(EXIT_FAILURE);
     }
 
-    struct sockaddr_in server_address;
+    struct sockaddr server_address;
     memset(&server_address, 0, sizeof(server_address));
-    server_address.sin_family = AF_INET;
-    server_address.sin_port = htons(12345);
-    server_address.sin_addr = server_address_;
+    ((struct sockaddr_in*)(&server_address))->sin_family = AF_INET;
+    ((struct sockaddr_in*)(&server_address))->sin_port = htons(12345);
+    ((struct sockaddr_in*)(&server_address))->sin_addr = server_address_;
 
     int so = socket(AF_INET, SOCK_DGRAM, 0);
 
