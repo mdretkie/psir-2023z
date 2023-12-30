@@ -40,6 +40,7 @@ void send_and_free_message(OutboundMessage message, int so) {
     char* bytes = message_serialise_and_free(message.message);
     sendto_all(so, (char*)&bytes_length, sizeof(bytes_length), message.receiver_address);
     sendto_all(so, bytes, bytes_length, message.receiver_address);
+    free(bytes);
 }
 
 InboundMessage receive_message_blocking(int so) {

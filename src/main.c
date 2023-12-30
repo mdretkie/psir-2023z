@@ -5,6 +5,7 @@
 #include "protocol.h"
 */
 #include "server.h"
+#include "test_client.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -18,8 +19,8 @@ int main(int argc, char** argv) {
 
     if (!strcmp(argv[1], "server")) {
         server_main();
-    } else if (!strcmp(argv[1], "client")) {
-        //client_main();
+    } else if (!strcmp(argv[1], "testclient")) {
+        test_client_main();
     } else {
         printf("Invalid arguments\n");
         exit(EXIT_FAILURE);
