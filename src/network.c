@@ -145,19 +145,23 @@ static void sendto_all(int so, char* buffer, size_t buffer_size, struct sockaddr
 }
 
 
-void network_send_and_free_message(Network* network, int so, OutboundMessage message) {
+AckStatus network_send_and_free_message(Network* network, int so, OutboundMessage message) {
     (void)network;
+    printf("DEBUG sending:\n");
+    message_println(message.message);
     uint32_t bytes_length = message_serialised_length(message.message);
     char* bytes = message_serialise_and_free(message.message);
     sendto_all(so, (char*)&bytes_length, sizeof(bytes_length), *(struct sockaddr_in*)(&message.receiver_address));
     sendto_all(so, bytes, bytes_length, *(struct sockaddr_in*)(&message.receiver_address));
     free(bytes);
+    return ack_received;
 }
 
 
 
 
 
+/*
 
 static void recvfrom_all(int so, char* buffer, size_t buffer_size, struct sockaddr* sender_address, socklen_t* sender_address_length) {
     size_t received_bytes = 0;
@@ -174,9 +178,11 @@ static void recvfrom_all(int so, char* buffer, size_t buffer_size, struct sockad
 }
 
 
+*/
 
 
 
+/*
 static void send_and_free_message_no_ack(OutboundMessage message, int so) {
     uint32_t bytes_length = message_serialised_length(message.message);
     char* bytes = message_serialise_and_free(message.message);
@@ -241,7 +247,6 @@ static AckStatus receive_ack(int so, OutboundMessage outbound_message) {
 
 // DEBUG ack
 AckStatus send_and_free_message(OutboundMessage message, int so) {
-    message_println(message.message);
     send_and_free_message_no_ack(message, so);
     //return receive_ack(so, message);
     return ack_received;
@@ -251,7 +256,7 @@ AckStatus send_and_free_message(OutboundMessage message, int so) {
 // DEBUG ack
 InboundMessage receive_message_blocking(int so) {
     InboundMessage inbound_message = receive_message_blocking_no_ack(so);
-    message_println(inbound_message.message);
     //ack(so, inbound_message);
     return inbound_message;
 }
+*/

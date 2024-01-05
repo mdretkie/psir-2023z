@@ -5,7 +5,7 @@
 #include "network.h"
 
 
-void handle_inbound_message(int so, InboundMessage inbound_message, TupleSpace* tuple_space) {
+void handle_inbound_message(Network* network, int so, InboundMessage inbound_message, TupleSpace* tuple_space) {
     switch (inbound_message.message.type) {
         case message_ack: 
         case message_tuple_space_get_reply:
@@ -18,12 +18,16 @@ void handle_inbound_message(int so, InboundMessage inbound_message, TupleSpace* 
 
         case message_tuple_space_get_request:
             (void)0;
+            printf("DEBUG calling tuple_space_get()()\n");
+
             TupleSpaceOperationResult result = tuple_space_get(
                 tuple_space, 
                 inbound_message.message.data.tuple_space_get_request.tuple_template, 
                 inbound_message.message.data.tuple_space_get_request.blocking_mode, 
                 inbound_message.message.data.tuple_space_get_request.remove_policy
             );
+
+            printf("DEBUG replying in handle_()\n");
 
             Message message = {
                 .id = message_next_id(),
@@ -40,7 +44,7 @@ void handle_inbound_message(int so, InboundMessage inbound_message, TupleSpace* 
                 .receiver_address = inbound_message.sender_address,
             };
 
-            if (send_and_free_message(outbound_message, so) == ack_lost) {
+            if (network_send_and_free_message(network, so, outbound_message) == ack_lost) {
                 printf("%s Error: ACK lost\n", formatted_timestamp());
             }
             break;
@@ -83,7 +87,8 @@ void server_main() {
         printf("%s Received message from %s:\n", formatted_timestamp(), address_to_text(*(struct sockaddr_in*)(&inbound_message.sender_address)));
         message_println(inbound_message.message);
 
-        handle_inbound_message(so, inbound_message, &tuple_space);
+        handle_inbound_message(&network, so, inbound_message, &tuple_space);
+        printf("DEBUG handled\n");
     }
 
     network_free(network);

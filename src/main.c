@@ -1,5 +1,4 @@
 #include "server.h"
-#include "test_client.h"
 #include "app1.h"
 #include "app2.h"
 #include <stdio.h>
@@ -15,8 +14,6 @@ int main(int argc, char** argv) {
 
     if (!strcmp(argv[1], "server")) {
         server_main();
-    } else if (!strcmp(argv[1], "testclient")) {
-        test_client_main();
     } else if (!strcmp(argv[1], "app1")) {
         app1_main();
     } else if (!strcmp(argv[1], "app2")) {
