@@ -7,7 +7,6 @@
 
 
 typedef struct MasterArgs {
-    int server_socket;
     struct sockaddr server_address;
 } MasterArgs;
 
@@ -26,7 +25,7 @@ bool is_prime(int num)
 }
 
 
-void master_create_task(MasterArgs args, int i) {
+void master_create_task(int server_socket, MasterArgs args, int i) {
     Tuple tuple = 
         tuple_new(
             2,
@@ -50,7 +49,7 @@ void master_create_task(MasterArgs args, int i) {
     };
 
     printf("%s [M]  Creating task for n = %d\n", formatted_timestamp(), i);
-    if (send_and_free_message(outbound_message, args.server_socket) != ack_received) {
+    if (send_and_free_message(outbound_message, server_socket) != ack_received) {
         printf("%s [M]  Error: ACK lost\n", formatted_timestamp());
     }
 }
@@ -62,7 +61,7 @@ typedef struct MasterResult {
 } MasterResult;
 
 
-MasterResult master_query_result(MasterArgs args, char const* query) {
+MasterResult master_query_result(int server_socket, MasterArgs args, char const* query) {
     Tuple tuple_template = 
         tuple_new(
             2,
@@ -87,11 +86,11 @@ MasterResult master_query_result(MasterArgs args, char const* query) {
         .receiver_address = args.server_address,
     };
 
-    if (send_and_free_message(outbound_message, args.server_socket) == ack_lost) {
+    if (send_and_free_message(outbound_message, server_socket) == ack_lost) {
         printf("%s [M]  Error: ACK lost\n", formatted_timestamp());
     }
 
-    InboundMessage inbound_message = receive_message_blocking(args.server_socket);
+    InboundMessage inbound_message = receive_message_blocking(server_socket);
     if (inbound_message.message.type != message_tuple_space_get_reply) {
         printf("%s [M]  Error: expected MessageTupleSpaceGetReply\n", formatted_timestamp());
         MasterResult result = {.retrieved = false,};
@@ -118,16 +117,21 @@ MasterResult master_query_result(MasterArgs args, char const* query) {
 
 
 int master_fn(void* args_) {
-    return 0;
     MasterArgs args = *(MasterArgs*)(args_);
 
     printf("%s [M]  Master starting\n", formatted_timestamp());
 
-    int n = 32;
+    int server_socket = socket(AF_INET, SOCK_DGRAM, 0);
+    if (server_socket == -1) {
+        perror("socket() error");
+        exit(EXIT_FAILURE);
+    }
+
+    int n = 1;
 
     printf("%s [M]  Creating %d tasks\n", formatted_timestamp(), n);
     for(int i = 0; i < n; ++i) {
-        master_create_task(args, i);
+        master_create_task(server_socket, args, i);
     }
 
     printf("%s [M]  Collecting results\n", formatted_timestamp());
@@ -135,13 +139,13 @@ int master_fn(void* args_) {
     int result_count = 0;
 
     while (result_count != n) {
-        MasterResult result = master_query_result(args, "prime");
+        MasterResult result = master_query_result(server_socket, args, "prime");
 
         if (result.retrieved) {
             result_count += 1;
             printf("%s [M]  Result %d/%d: %d is prime\n", formatted_timestamp(), result_count, n, result.i);
         } else {
-            MasterResult result = master_query_result(args, "not prime");
+            MasterResult result = master_query_result(server_socket, args, "not prime");
 
             if (result.retrieved) {
                 result_count += 1;
@@ -161,7 +165,6 @@ int master_fn(void* args_) {
 
 typedef struct WorkerArgs {
     int worker_id;
-    int server_socket;
     struct sockaddr server_address;
 } WorkerArgs;
 
@@ -169,6 +172,12 @@ int worker_fn(void* args_) {
     WorkerArgs args = *(WorkerArgs*)(args_);
 
     printf("%s [W%d] Worker %d starting\n", formatted_timestamp(), args.worker_id, args.worker_id);
+
+    int server_socket = socket(AF_INET, SOCK_DGRAM, 0);
+    if (server_socket == -1) {
+        perror("socket() error");
+        exit(EXIT_FAILURE);
+    }
 
 
     for(;;) {
@@ -196,11 +205,11 @@ int worker_fn(void* args_) {
             .receiver_address = args.server_address,
         };
 
-        if (send_and_free_message(outbound_message, args.server_socket) == ack_lost) {
+        if (send_and_free_message(outbound_message, server_socket) == ack_lost) {
             printf("%s [W%d] Error: ACK lost\n", formatted_timestamp(), args.worker_id);
         }
 
-        InboundMessage inbound_message = receive_message_blocking(args.server_socket);
+        InboundMessage inbound_message = receive_message_blocking(server_socket);
         if (inbound_message.message.type != message_tuple_space_get_reply) {
             printf("%s [W%d] Error: expected MessageTupleSpaceGetReply\n", formatted_timestamp(), args.worker_id);
             continue;
@@ -239,7 +248,7 @@ int worker_fn(void* args_) {
             .receiver_address = args.server_address,
         };
 
-        if (send_and_free_message(outbound_message2, args.server_socket) != ack_received) {
+        if (send_and_free_message(outbound_message2, server_socket) != ack_received) {
             printf("%s [W%d] Error: ACK lost\n", formatted_timestamp(), args.worker_id);
         }
     }
@@ -265,10 +274,7 @@ void app1_main() {
     ((struct sockaddr_in*)(&server_address))->sin_port = htons(12345);
     ((struct sockaddr_in*)(&server_address))->sin_addr = server_address_;
 
-    int server_socket = socket(AF_INET, SOCK_DGRAM, 0);
-
     MasterArgs master_args = {
-        .server_socket = server_socket,
         .server_address = server_address,
     };
 
@@ -279,14 +285,13 @@ void app1_main() {
     }
 
 
-    int worker_count = 8;
+    int worker_count = 1;
     thrd_t* worker_thrds = malloc(worker_count * sizeof(thrd_t));
 
     WorkerArgs* worker_args = malloc(worker_count * sizeof(WorkerArgs));
     
     for (int i = 0; i < worker_count; ++i) {
         worker_args[i].worker_id = i;
-        worker_args[i].server_socket = server_socket;
         worker_args[i].server_address = server_address;
 
         if (thrd_create(&worker_thrds[i], worker_fn, &worker_args[i]) != thrd_success) {
