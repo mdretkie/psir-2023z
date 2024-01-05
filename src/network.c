@@ -16,8 +16,8 @@ InboundBuffer inbound_buffer_new(struct sockaddr sender_address) {
 }
 
 
-void inbound_buffer_free(InboundBuffer* inbound_buffer) {
-    free(inbound_buffer->buffer);
+void inbound_buffer_free(InboundBuffer inbound_buffer) {
+    free(inbound_buffer.buffer);
 }
 
 
@@ -33,7 +33,7 @@ bool inbound_buffer_has_complete_message(InboundBuffer* inbound_buffer) {
 
 InboundMessage inbound_buffer_take_complete_message(InboundBuffer* inbound_buffer) {
     if (!inbound_buffer_has_complete_message(inbound_buffer)) {
-        puts("No complete message in buffer");
+        puts("Error: No complete message in buffer");
         exit(EXIT_FAILURE);
     }
 
@@ -71,8 +71,11 @@ Network network_new() {
     return network;
 }
 
-void network_free(Network* network) {
-    free(network->inbound_buffers);
+void network_free(Network network) {
+    for (size_t i = 0; i < network.inbound_buffer_count; ++i) {
+        inbound_buffer_free(network.inbound_buffers[i]);
+    }
+    free(network.inbound_buffers);
 }
 
 void network_append_inbound_buffer(Network* network, struct sockaddr sender_address) {
@@ -96,7 +99,6 @@ void network_push_inbound_data(Network* network, char const* data, size_t data_l
 bool network_take_any_complete_message(Network* network, InboundMessage* inbound_message_result) {
     for (size_t i = 0; i < network->inbound_buffer_count; ++i) {
         if (inbound_buffer_has_complete_message(&network->inbound_buffers[i])) {
-            printf("DEBUG length = %lu\n", network->inbound_buffers[i].buffer_length);
             *inbound_message_result = inbound_buffer_take_complete_message(&network->inbound_buffers[i]);
             return true;
         }
@@ -180,8 +182,6 @@ static void send_and_free_message_no_ack(OutboundMessage message, int so) {
     char* bytes = message_serialise_and_free(message.message);
     sendto_all(so, (char*)&bytes_length, sizeof(bytes_length), *(struct sockaddr_in*)(&message.receiver_address));
     sendto_all(so, bytes, bytes_length, *(struct sockaddr_in*)(&message.receiver_address));
-    printf("DEBUG sent message length = %d\n", bytes_length);
-    printf("DEBUG sent message id = %d\n", *(uint32_t*)(bytes));
     free(bytes);
 }
 
@@ -194,9 +194,6 @@ static InboundMessage receive_message_blocking_no_ack(int so) {
 
     char* bytes = malloc(bytes_length);
     recvfrom_all(so, bytes, bytes_length, NULL, NULL);
-
-    printf("DEBUG received message length = %d\n", bytes_length);
-    printf("DEBUG received message id = %d\n", *(uint32_t*)(bytes));
 
     Message message = message_deserialise_and_free(bytes);
 
@@ -244,7 +241,6 @@ static AckStatus receive_ack(int so, OutboundMessage outbound_message) {
 
 // DEBUG ack
 AckStatus send_and_free_message(OutboundMessage message, int so) {
-    printf("DEBUG sending message:\n");
     message_println(message.message);
     send_and_free_message_no_ack(message, so);
     //return receive_ack(so, message);
@@ -255,7 +251,6 @@ AckStatus send_and_free_message(OutboundMessage message, int so) {
 // DEBUG ack
 InboundMessage receive_message_blocking(int so) {
     InboundMessage inbound_message = receive_message_blocking_no_ack(so);
-    printf("DEBUG received message:\n");
     message_println(inbound_message.message);
     //ack(so, inbound_message);
     return inbound_message;

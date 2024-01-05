@@ -86,6 +86,7 @@ void server_main() {
         handle_inbound_message(so, inbound_message, &tuple_space);
     }
 
+    network_free(network);
     tuple_space_free(tuple_space);
 
     printf("%s Tuple space destroyed\n", formatted_timestamp());

@@ -29,7 +29,7 @@ typedef struct InboundBuffer {
 } InboundBuffer;
 
 InboundBuffer inbound_buffer_new(struct sockaddr sender_address);
-void inbound_buffer_free(InboundBuffer* inbound_buffer);
+void inbound_buffer_free(InboundBuffer inbound_buffer);
 
 bool inbound_buffer_has_complete_message(InboundBuffer* inbound_buffer);
 /* Nadmiarowe dane (z następnej przychodzącej wiadomości) są pozostawione w buforze. */
@@ -43,7 +43,7 @@ typedef struct Network {
 } Network;
 
 Network network_new();
-void network_free(Network* network);
+void network_free(Network network);
 
 void network_append_inbound_buffer(Network* network, struct sockaddr sender_address);
 void network_push_inbound_data(Network* network, char const* data, size_t data_length, struct sockaddr sender_address);

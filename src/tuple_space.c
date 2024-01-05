@@ -51,7 +51,8 @@ static Tuple tuple_space_get_helper(TupleSpace* tuple_space, size_t index, Tuple
 
 TupleSpaceOperationResult tuple_space_get(TupleSpace* tuple_space, Tuple tuple_template, TupleSpaceOperationBlockingMode blocking_mode, TupleSpaceOperationRemovePolicy remove_policy) {
     TupleSpaceOperationResult result = {
-	.status = tuple_space_failure
+	.status = tuple_space_failure,
+        .tuple = tuple_new(0),
     };
 
     switch (blocking_mode) {
