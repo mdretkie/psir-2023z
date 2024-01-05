@@ -47,6 +47,7 @@ uint32_t message_next_id();
 
 char* message_serialise_and_free(Message message);
 Message message_deserialise_and_free(char* buffer);
+Message message_deserialise_no_free(char* buffer);
 size_t message_serialised_length(Message message);
 
 void message_println(Message message);

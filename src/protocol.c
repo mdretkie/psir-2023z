@@ -54,7 +54,7 @@ char* message_serialise_and_free(Message message) {
     return buffer_start;
 }
 
-Message message_deserialise_and_free(char* buffer_) {
+Message message_deserialise_no_free(char* buffer_) {
     /* Żeby nie było problemu przy przypisywaniu char const* (z tuple_deserialise()) do char*,
      * i jednocześnie potrzebujemy char*, aby użyć free(). */
     char const* buffer = buffer_;
@@ -92,6 +92,11 @@ Message message_deserialise_and_free(char* buffer_) {
 	    break;
     }
 
+    return message;
+}
+
+Message message_deserialise_and_free(char* buffer_) {
+    Message message = message_deserialise_no_free(buffer_);
     free(buffer_);
     return message;
 }

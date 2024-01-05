@@ -74,9 +74,11 @@ void server_main() {
 
     printf("%s Listening for messages\n", formatted_timestamp());
 
+    Network network = network_new();
+
 
     for(;;) {
-        InboundMessage inbound_message = receive_message_blocking(so);
+        InboundMessage inbound_message = network_receive_message_blocking(&network, so);
 
         printf("%s Received message from %s:\n", formatted_timestamp(), address_to_text(*(struct sockaddr_in*)(&inbound_message.sender_address)));
         message_println(inbound_message.message);
