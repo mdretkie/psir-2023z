@@ -25,7 +25,7 @@ bool is_prime(int num)
 }
 
 
-void master_create_task(Network* network, int server_socket, MasterArgs args, int i) {
+void master_create_task(Network* network, MasterArgs args, int i) {
     Tuple tuple = 
         tuple_new(
             2,
@@ -49,9 +49,7 @@ void master_create_task(Network* network, int server_socket, MasterArgs args, in
     };
 
     printf("%s [M]  Creating task for n = %d\n", formatted_timestamp(), i);
-    if (network_send_and_free_message(network, server_socket, outbound_message) != ack_received) {
-        printf("%s [M]  Error: ACK lost\n", formatted_timestamp());
-    }
+    network_send_and_free_message(network, outbound_message);
 }
 
 
@@ -61,7 +59,7 @@ typedef struct MasterResult {
 } MasterResult;
 
 
-MasterResult master_query_result(Network* network, int server_socket, MasterArgs args, char const* query) {
+MasterResult master_query_result(Network* network, MasterArgs args, char const* query) {
     Tuple tuple_template = 
         tuple_new(
             2,
@@ -87,11 +85,9 @@ MasterResult master_query_result(Network* network, int server_socket, MasterArgs
         .receiver_address = args.server_address,
     };
 
-    if (network_send_and_free_message(network, server_socket, outbound_message) == ack_lost) {
-        printf("%s [M]  Error: ACK lost\n", formatted_timestamp());
-    }
+    network_send_and_free_message(network, outbound_message);
 
-    InboundMessage inbound_message = network_receive_message_blocking(network, server_socket);
+    InboundMessage inbound_message = network_receive_message_blocking(network);
     if (inbound_message.message.type != message_tuple_space_get_reply) {
         printf("%s [M]  Error: expected MessageTupleSpaceGetReply\n", formatted_timestamp());
         MasterResult result = {.retrieved = false,};
@@ -128,13 +124,13 @@ int master_fn(void* args_) {
         exit(EXIT_FAILURE);
     }
 
-    Network network = network_new();
+    Network network = network_new(server_socket);
 
     int n = 32;
 
     printf("%s [M]  Creating %d tasks\n", formatted_timestamp(), n);
     for(int i = 0; i < n; ++i) {
-        master_create_task(&network, server_socket, args, i);
+        master_create_task(&network, args, i);
     }
 
     printf("%s [M]  Collecting results\n", formatted_timestamp());
@@ -144,13 +140,13 @@ int master_fn(void* args_) {
     while (result_count != n) {
         sleep_ms(500);
 
-        MasterResult result = master_query_result(&network, server_socket, args, "prime");
+        MasterResult result = master_query_result(&network, args, "prime");
 
         if (result.retrieved) {
             result_count += 1;
             printf("%s [M]  Result %d/%d: %d is prime\n", formatted_timestamp(), result_count, n, result.i);
         } else {
-            MasterResult result = master_query_result(&network, server_socket, args, "not prime");
+            MasterResult result = master_query_result(&network, args, "not prime");
 
             if (result.retrieved) {
                 result_count += 1;
@@ -169,7 +165,6 @@ int master_fn(void* args_) {
 }
 
 
-
 typedef struct WorkerArgs {
     int worker_id;
     struct sockaddr server_address;
@@ -186,7 +181,7 @@ int worker_fn(void* args_) {
         exit(EXIT_FAILURE);
     }
 
-    Network network = network_new();
+    Network network = network_new(server_socket);
 
 
     for(;;) {
@@ -214,11 +209,9 @@ int worker_fn(void* args_) {
             .receiver_address = args.server_address,
         };
 
-        if (network_send_and_free_message(&network, server_socket, outbound_message) == ack_lost) {
-            printf("%s [W%d] Error: ACK lost\n", formatted_timestamp(), args.worker_id);
-        }
+        network_send_and_free_message(&network, outbound_message);
 
-        InboundMessage inbound_message = network_receive_message_blocking(&network, server_socket);
+        InboundMessage inbound_message = network_receive_message_blocking(&network);
         if (inbound_message.message.type != message_tuple_space_get_reply) {
             printf("%s [W%d] Error: expected MessageTupleSpaceGetReply\n", formatted_timestamp(), args.worker_id);
             continue;
@@ -257,9 +250,7 @@ int worker_fn(void* args_) {
             .receiver_address = args.server_address,
         };
 
-        if (network_send_and_free_message(&network, server_socket, outbound_message2) != ack_received) {
-            printf("%s [W%d] Error: ACK lost\n", formatted_timestamp(), args.worker_id);
-        }
+        network_send_and_free_message(&network, outbound_message2);
     }
 
     printf("%s [W%d] Worker %d finished\n", formatted_timestamp(), args.worker_id, args.worker_id);

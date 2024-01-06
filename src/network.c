@@ -62,8 +62,9 @@ void inbound_buffer_push_data(InboundBuffer* inbound_buffer, char const* data, s
 }
 
 
-Network network_new() {
+Network network_new(int so) {
     Network network = {
+        .so = so,
         .inbound_buffer_count = 0,
         .inbound_buffers = NULL,
     };
@@ -107,7 +108,7 @@ bool network_take_any_complete_message(Network* network, InboundMessage* inbound
 }
 
 
-InboundMessage network_receive_message_blocking(Network* network, int so) {
+InboundMessage network_receive_message_blocking(Network* network) {
     char buffer[64];
 
     for(;;) {
@@ -115,7 +116,7 @@ InboundMessage network_receive_message_blocking(Network* network, int so) {
         socklen_t sender_address_length = sizeof(sender_address);
 
         ssize_t received_bytes;
-        if((received_bytes = recvfrom(so, buffer, sizeof(buffer), 0, &sender_address, &sender_address_length)) < 0) {
+        if((received_bytes = recvfrom(network->so, buffer, sizeof(buffer), 0, &sender_address, &sender_address_length)) < 0) {
             perror("in recvfrom_all(): recvfrom() error");
             exit(EXIT_FAILURE);
         }
@@ -145,13 +146,16 @@ static void sendto_all(int so, char* buffer, size_t buffer_size, struct sockaddr
 }
 
 
-AckStatus network_send_and_free_message(Network* network, int so, OutboundMessage message) {
+void network_send_and_free_message(Network* network, OutboundMessage message) {
     (void)network;
     uint32_t bytes_length = message_serialised_length(&message.message);
     char* bytes = message_serialise_and_free(message.message);
-    sendto_all(so, (char*)&bytes_length, sizeof(bytes_length), *(struct sockaddr_in*)(&message.receiver_address));
-    sendto_all(so, bytes, bytes_length, *(struct sockaddr_in*)(&message.receiver_address));
+    sendto_all(network->so, (char*)&bytes_length, sizeof(bytes_length), *(struct sockaddr_in*)(&message.receiver_address));
+    sendto_all(network->so, bytes, bytes_length, *(struct sockaddr_in*)(&message.receiver_address));
     free(bytes);
-    return ack_received;
 }
 
+
+static void network_ack_message(Network* network, InboundMessage const* inbound_message) {
+
+}

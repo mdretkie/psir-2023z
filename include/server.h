@@ -8,7 +8,6 @@
 
 typedef struct Server {
     TupleSpace tuple_space;
-    int so;
     Network network;
     InboundMessage* blocked_get_requests;
     size_t blocked_get_request_count;

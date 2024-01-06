@@ -15,8 +15,9 @@ Server server_new() {
 
     server.tuple_space = tuple_space_new();
 
-    server.so = socket(AF_INET, SOCK_DGRAM, 0);
-    if (server.so == -1) {
+    int so;
+    so = socket(AF_INET, SOCK_DGRAM, 0);
+    if (so == -1) {
         perror("socket() error");
         exit(EXIT_FAILURE);
     }
@@ -27,13 +28,13 @@ Server server_new() {
     listen_address.sin_port = htons(12345);
     listen_address.sin_addr.s_addr = htonl(INADDR_ANY);
 
-    if (bind(server.so, (struct sockaddr*)&listen_address, sizeof(listen_address)) < 0) {
+    if (bind(so, (struct sockaddr*)&listen_address, sizeof(listen_address)) < 0) {
         perror("in main(): bind() error");
         exit(EXIT_FAILURE);
     }
 
 
-    server.network = network_new();
+    server.network = network_new(so);
 
     server.blocked_get_requests = NULL;
     server.blocked_get_request_count = 0;
@@ -44,13 +45,13 @@ Server server_new() {
 void server_free(Server server) {
     free(server.blocked_get_requests);
     network_free(server.network);
-    close(server.so);
+    close(server.network.so);
     tuple_space_free(server.tuple_space);
 }
 
 void server_run(Server* server) {
     for(;;) {
-        InboundMessage inbound_message = network_receive_message_blocking(&server->network, server->so);
+        InboundMessage inbound_message = network_receive_message_blocking(&server->network);
         printf("%s Received message from %s: %s\n", formatted_timestamp(), address_to_text(*(struct sockaddr_in*)(&inbound_message.sender_address)), message_to_string_short(&inbound_message.message));
 
         server_handle_inbound_message_nonblocking(server, inbound_message);
@@ -101,7 +102,7 @@ void server_handle_inbound_message_nonblocking(Server* server, InboundMessage in
                 .receiver_address = inbound_message.sender_address,
             };
 
-            network_send_and_free_message(&server->network, server->so, outbound_message);
+            network_send_and_free_message(&server->network, outbound_message);
             break;
     }
 }
@@ -140,7 +141,7 @@ void server_process_blocked_get_requests(Server* server) {
                 .receiver_address = server->blocked_get_requests[i].sender_address,
             };
 
-            network_send_and_free_message(&server->network, server->so, outbound_message);
+            network_send_and_free_message(&server->network, outbound_message);
 
             server->blocked_get_requests[i] = server->blocked_get_requests[server->blocked_get_request_count - 1];
             server->blocked_get_requests = realloc(server->blocked_get_requests, (server->blocked_get_request_count - 1) * sizeof(InboundMessage));
