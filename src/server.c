@@ -67,9 +67,11 @@ void server_handle_inbound_message_nonblocking(Server* server, InboundMessage in
     }
 
     switch (inbound_message.message.type) {
-        case message_ack: 
         case message_tuple_space_get_reply:
             printf("%s Error: unexpected inbound message type\n", formatted_timestamp());
+            break;
+
+        case message_ack: 
             break;
 
         case message_tuple_space_insert_request:

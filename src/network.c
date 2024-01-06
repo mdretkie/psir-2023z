@@ -108,6 +108,26 @@ bool network_take_any_complete_message(Network* network, InboundMessage* inbound
 }
 
 
+static void network_ack_inbound_message(Network* network, InboundMessage const* inbound_message) {
+    Message ack_message = {
+        .id = message_next_id(),
+        .type = message_ack,
+        .data = {
+            .ack = {
+                .message_id = inbound_message->message.id,
+            },
+        },
+    };
+
+    OutboundMessage outbound_message = {
+        .message = ack_message,
+        .receiver_address = inbound_message->sender_address,
+    };
+
+    network_send_and_free_message(network, outbound_message);
+}
+
+
 InboundMessage network_receive_message_blocking(Network* network) {
     char buffer[64];
 
@@ -124,7 +144,12 @@ InboundMessage network_receive_message_blocking(Network* network) {
         network_push_inbound_data(network, buffer, received_bytes, sender_address);
 
         InboundMessage inbound_message;
+
         if (network_take_any_complete_message(network, &inbound_message)) {
+            if (inbound_message.message.type != message_ack) {
+                network_ack_inbound_message(network, &inbound_message);
+            }
+
             return inbound_message;
         }
     }
@@ -156,6 +181,3 @@ void network_send_and_free_message(Network* network, OutboundMessage message) {
 }
 
 
-static void network_ack_message(Network* network, InboundMessage const* inbound_message) {
-
-}

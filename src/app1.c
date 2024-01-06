@@ -25,6 +25,17 @@ bool is_prime(int num)
 }
 
 
+void receive_ack(Network* network, OutboundMessage const* outbound_message) {
+    InboundMessage inbound_message = network_receive_message_blocking(network);
+
+    if (!(inbound_message.message.type == message_ack && inbound_message.message.data.ack.message_id == outbound_message->message.id)) {
+        printf("%s [?]  ACK lost\n", formatted_timestamp());
+    } else {
+        printf("%s [?]  ACK received\n", formatted_timestamp());
+    }
+}
+
+
 void master_create_task(Network* network, MasterArgs args, int i) {
     Tuple tuple = 
         tuple_new(
@@ -50,6 +61,7 @@ void master_create_task(Network* network, MasterArgs args, int i) {
 
     printf("%s [M]  Creating task for n = %d\n", formatted_timestamp(), i);
     network_send_and_free_message(network, outbound_message);
+    receive_ack(network, &outbound_message);
 }
 
 
@@ -86,6 +98,7 @@ MasterResult master_query_result(Network* network, MasterArgs args, char const* 
     };
 
     network_send_and_free_message(network, outbound_message);
+    receive_ack(network, &outbound_message);
 
     InboundMessage inbound_message = network_receive_message_blocking(network);
     if (inbound_message.message.type != message_tuple_space_get_reply) {
@@ -210,10 +223,11 @@ int worker_fn(void* args_) {
         };
 
         network_send_and_free_message(&network, outbound_message);
+        receive_ack(&network, &outbound_message);
 
         InboundMessage inbound_message = network_receive_message_blocking(&network);
         if (inbound_message.message.type != message_tuple_space_get_reply) {
-            printf("%s [W%d] Error: expected MessageTupleSpaceGetReply\n", formatted_timestamp(), args.worker_id);
+            printf("%s [W%d] Error: expected MessageTupleSpaceGetReply, got %s\n", formatted_timestamp(), args.worker_id, message_to_string_short(&inbound_message.message));
             continue;
         }
 
@@ -251,6 +265,7 @@ int worker_fn(void* args_) {
         };
 
         network_send_and_free_message(&network, outbound_message2);
+        receive_ack(&network, &outbound_message2);
     }
 
     printf("%s [W%d] Worker %d finished\n", formatted_timestamp(), args.worker_id, args.worker_id);

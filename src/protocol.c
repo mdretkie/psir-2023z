@@ -130,50 +130,6 @@ size_t message_serialised_length(Message const* message) {
     return size;
 }
 
-/*
-void message_debug_println(Message message) {
-    char const* type_name =
-	message.type == message_ack ? "ACK": 
-	message.type == message_tuple_space_insert_request ? "TUPLE SPACE INSERT REQUEST":
-	message.type == message_tuple_space_get_request ? "TUPLE SPACE GET REQUEST":
-	message.type == message_tuple_space_get_reply ? "TUPLE SPACE GET REPLY": 
-	"INVALID";
-
-
-    printf("Message {\n    id: %u\n    type: %s\n    data: {\n", message.id, type_name);
-
-    switch (message.type) {
-	case message_ack: 
-	    printf("        message_id: %u\n", message.data.ack.message_id); 
-	    break;
-
-	case message_tuple_space_insert_request:
-	    printf("        tuple: ");
-	    tuple_println(message.data.tuple_space_insert_request.tuple);
-	    break;
-
-	case message_tuple_space_get_request:
-	    printf("        tuple_template: ");
-	    tuple_println(message.data.tuple_space_get_request.tuple_template);
-	    printf("        blocking_mode: %d\n", message.data.tuple_space_get_request.blocking_mode);
-	    printf("        remove_policy: %d\n", message.data.tuple_space_get_request.remove_policy);
-	    break;
-
-	case message_tuple_space_get_reply:
-	    printf("        result.status: %d\n", message.data.tuple_space_get_reply.result.status);
-	    printf("        result.tuple: ");
-	    tuple_println(message.data.tuple_space_get_reply.result.tuple);
-	    break;
-
-	default: 
-	    printf("        INVALID\n");
-	    break;
-    }
-
-    printf("    }\n}\n");
-}
-*/
-
 
 char const* message_to_string_short(Message const* message) {
     static thread_local char buffer[2048];
@@ -187,11 +143,11 @@ char const* message_to_string_short(Message const* message) {
 
     switch (message->type) {
 	case message_ack: 
-	    snprintf(buffer, sizeof(buffer), "%s: id=%u", type_name, message->data.ack.message_id); 
+	    snprintf(buffer, sizeof(buffer), "(id: %u) %s: %u", message->id, type_name, message->data.ack.message_id); 
 	    break;
 
 	case message_tuple_space_insert_request:
-	    snprintf(buffer, sizeof(buffer), "%s: %s", type_name, tuple_to_string(&message->data.tuple_space_insert_request.tuple)); 
+	    snprintf(buffer, sizeof(buffer), "(id: %u) %s: %s", message->id, type_name, tuple_to_string(&message->data.tuple_space_insert_request.tuple)); 
 	    break;
 
 	case message_tuple_space_get_request:
@@ -207,7 +163,7 @@ char const* message_to_string_short(Message const* message) {
                 message->data.tuple_space_get_request.remove_policy == tuple_space_keep ? "keep":
                 "invalid remove policy";
 
-	    snprintf(buffer, sizeof(buffer), "%s: %s %s %s", type_name, tuple_to_string(&message->data.tuple_space_get_request.tuple_template), blocking_mode, remove_policy); 
+	    snprintf(buffer, sizeof(buffer), "(id: %u) %s: %s %s %s", message->id, type_name, tuple_to_string(&message->data.tuple_space_get_request.tuple_template), blocking_mode, remove_policy); 
 	    break;
 
 	case message_tuple_space_get_reply:
@@ -218,11 +174,11 @@ char const* message_to_string_short(Message const* message) {
                 message->data.tuple_space_get_reply.result.status == tuple_space_failure ? "failure":
                 "invalid status";
 
-	    snprintf(buffer, sizeof(buffer), "%s: %s %s", type_name, tuple_to_string(&message->data.tuple_space_get_reply.result.tuple), status); 
+	    snprintf(buffer, sizeof(buffer), "(id: %u) %s: %s %s", message->id, type_name, tuple_to_string(&message->data.tuple_space_get_reply.result.tuple), status); 
 	    break;
 
 	default: 
-	    snprintf(buffer, sizeof(buffer), "%s", type_name);
+	    snprintf(buffer, sizeof(buffer), "(id: %u) %s", message->id, type_name);
 	    break;
     }
 
