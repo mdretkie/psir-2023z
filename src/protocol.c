@@ -130,6 +130,7 @@ size_t message_serialised_length(Message message) {
     return size;
 }
 
+/*
 void message_debug_println(Message message) {
     char const* type_name =
 	message.type == message_ack ? "ACK": 
@@ -171,6 +172,7 @@ void message_debug_println(Message message) {
 
     printf("    }\n}\n");
 }
+*/
 
 
 char const* message_to_string_short(Message message) {
@@ -193,6 +195,8 @@ char const* message_to_string_short(Message message) {
 	    break;
 
 	case message_tuple_space_get_request:
+            (void)0;
+
             char const* blocking_mode = 
                 message.data.tuple_space_get_request.blocking_mode == tuple_space_blocking ? "blocking":
                 message.data.tuple_space_get_request.blocking_mode == tuple_space_nonblocking ? "nonblocking":
@@ -207,6 +211,8 @@ char const* message_to_string_short(Message message) {
 	    break;
 
 	case message_tuple_space_get_reply:
+            (void)0;
+            
             char const* status = 
                 message.data.tuple_space_get_reply.result.status == tuple_space_success ? "success":
                 message.data.tuple_space_get_reply.result.status == tuple_space_failure ? "failure":

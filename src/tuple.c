@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include <threads.h>
 
 // TODO: endianness, error handling
 
@@ -111,7 +112,7 @@ bool tuple_match(Tuple t1, Tuple t2) {
 
 
 
-void tuple_to_string(Tuple tuple) {
+char const* tuple_to_string(Tuple tuple) {
     static thread_local char buffer[2048];
     int offset = snprintf(buffer, sizeof(buffer), "(");
 

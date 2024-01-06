@@ -147,8 +147,6 @@ static void sendto_all(int so, char* buffer, size_t buffer_size, struct sockaddr
 
 AckStatus network_send_and_free_message(Network* network, int so, OutboundMessage message) {
     (void)network;
-    printf("DEBUG sending:\n");
-    message_println(message.message);
     uint32_t bytes_length = message_serialised_length(message.message);
     char* bytes = message_serialise_and_free(message.message);
     sendto_all(so, (char*)&bytes_length, sizeof(bytes_length), *(struct sockaddr_in*)(&message.receiver_address));

@@ -51,7 +51,6 @@ Message message_deserialise_no_free(char* buffer);
 size_t message_serialised_length(Message message);
 
 char const* message_to_string_short(Message message);
-void message_debug_println(Message message);
 
 
 #endif

@@ -51,8 +51,7 @@ void server_free(Server server) {
 void server_run(Server* server) {
     for(;;) {
         InboundMessage inbound_message = network_receive_message_blocking(&server->network, server->so);
-        printf("%s Received message from %s:\n", formatted_timestamp(), address_to_text(*(struct sockaddr_in*)(&inbound_message.sender_address)));
-        message_println(inbound_message.message);
+        printf("%s Received message from %s: %s\n", formatted_timestamp(), address_to_text(*(struct sockaddr_in*)(&inbound_message.sender_address)), message_to_string_short(inbound_message.message));
 
         server_handle_inbound_message_nonblocking(server, inbound_message);
 

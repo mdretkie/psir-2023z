@@ -80,9 +80,6 @@ MasterResult master_query_result(Network* network, int server_socket, MasterArgs
             },
         },
     };
-
-    printf("DEBUG sending query:\n");
-    message_println(message);
     
 
     OutboundMessage outbound_message = {
