@@ -31,7 +31,7 @@ typedef struct InboundBuffer {
 InboundBuffer inbound_buffer_new(struct sockaddr sender_address);
 void inbound_buffer_free(InboundBuffer inbound_buffer);
 
-bool inbound_buffer_has_complete_message(InboundBuffer* inbound_buffer);
+bool inbound_buffer_has_complete_message(InboundBuffer const* inbound_buffer);
 /* Nadmiarowe dane (z następnej przychodzącej wiadomości) są pozostawione w buforze. */
 InboundMessage inbound_buffer_take_complete_message(InboundBuffer* inbound_buffer);
 void inbound_buffer_push_data(InboundBuffer* inbound_buffer, char const* data, size_t data_length);
@@ -50,14 +50,6 @@ void network_push_inbound_data(Network* network, char const* data, size_t data_l
 bool network_take_any_complete_message(Network* network, InboundMessage* inbound_message_result);
 InboundMessage network_receive_message_blocking(Network* network, int so);
 AckStatus network_send_and_free_message(Network* network, int so, OutboundMessage message);
-
-
-
-/*
-
-AckStatus send_and_free_message(OutboundMessage message, int so);
-InboundMessage receive_message_blocking(int so);
-*/
 
 
 #endif

@@ -48,9 +48,9 @@ uint32_t message_next_id();
 char* message_serialise_and_free(Message message);
 Message message_deserialise_and_free(char* buffer);
 Message message_deserialise_no_free(char* buffer);
-size_t message_serialised_length(Message message);
+size_t message_serialised_length(Message const* message);
 
-char const* message_to_string_short(Message message);
+char const* message_to_string_short(Message const* message);
 
 
 #endif

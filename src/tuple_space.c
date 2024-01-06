@@ -14,6 +14,9 @@ TupleSpace tuple_space_new() {
 void tuple_space_free(TupleSpace tuple_space) {
     cnd_destroy(&tuple_space.tuples_cnd);
     mtx_destroy(&tuple_space.tuples_mtx);
+    for (size_t i = 0; i < tuple_space.tuple_count; ++i) {
+        tuple_free(tuple_space.tuples[i]);
+    }
     free(tuple_space.tuples);
 }
 
@@ -50,7 +53,7 @@ static Tuple tuple_space_get_helper(TupleSpace* tuple_space, size_t index, Tuple
     }
 }
 
-TupleSpaceOperationResult tuple_space_get(TupleSpace* tuple_space, Tuple tuple_template, TupleSpaceOperationBlockingMode blocking_mode, TupleSpaceOperationRemovePolicy remove_policy) {
+TupleSpaceOperationResult tuple_space_get(TupleSpace* tuple_space, Tuple const* tuple_template, TupleSpaceOperationBlockingMode blocking_mode, TupleSpaceOperationRemovePolicy remove_policy) {
     TupleSpaceOperationResult result = {
 	.status = tuple_space_failure,
         .tuple = tuple_new(0),
@@ -62,7 +65,7 @@ TupleSpaceOperationResult tuple_space_get(TupleSpace* tuple_space, Tuple tuple_t
 
 	    for (;;) {
 		for (size_t idx = 0; idx < tuple_space->tuple_count; ++idx) {
-		    if (tuple_match(&tuple_template, &tuple_space->tuples[idx])) {
+		    if (tuple_match(tuple_template, &tuple_space->tuples[idx])) {
 			result.status = tuple_space_success;
 			result.tuple = tuple_space_get_helper(tuple_space, idx, remove_policy);
 			break;
@@ -84,7 +87,7 @@ TupleSpaceOperationResult tuple_space_get(TupleSpace* tuple_space, Tuple tuple_t
 	    mtx_lock(&tuple_space->tuples_mtx);
 
 	    for (size_t idx = 0; idx < tuple_space->tuple_count; ++idx) {
-		if (tuple_match(&tuple_template, &tuple_space->tuples[idx])) {
+		if (tuple_match(tuple_template, &tuple_space->tuples[idx])) {
 		    result.status = tuple_space_success;
 		    result.tuple = tuple_space_get_helper(tuple_space, idx, remove_policy);
 		    break;

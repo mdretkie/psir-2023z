@@ -5,7 +5,7 @@
 #include <string.h>
 #include <threads.h>
 
-// TODO: endianness, error handling
+// TODO: endianness
 
 Tuple tuple_new(uint32_t element_count, ...) {
     va_list args;
