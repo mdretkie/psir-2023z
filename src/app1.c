@@ -142,6 +142,8 @@ int master_fn(void* args_) {
     int result_count = 0;
 
     while (result_count != n) {
+        sleep_ms(500);
+
         MasterResult result = master_query_result(&network, server_socket, args, "prime");
 
         if (result.retrieved) {

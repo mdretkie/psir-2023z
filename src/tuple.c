@@ -148,7 +148,7 @@ char const* tuple_to_string(Tuple tuple) {
         }
     }
 
-    snprintf(buffer, sizeof(buffer), ")");
+    snprintf(buffer + offset, sizeof(buffer), ")");
 
     return buffer;
 }

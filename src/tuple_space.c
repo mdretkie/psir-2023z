@@ -81,11 +81,8 @@ TupleSpaceOperationResult tuple_space_get(TupleSpace* tuple_space, Tuple tuple_t
 	}
 
 	case tuple_space_nonblocking: {
-            printf("DEBUG here 0\n");
-
 	    mtx_lock(&tuple_space->tuples_mtx);
 
-            printf("DEBUG here 1\n");
 	    for (size_t idx = 0; idx < tuple_space->tuple_count; ++idx) {
 		if (tuple_match(tuple_template, tuple_space->tuples[idx])) {
 		    result.status = tuple_space_success;
@@ -93,7 +90,6 @@ TupleSpaceOperationResult tuple_space_get(TupleSpace* tuple_space, Tuple tuple_t
 		    break;
 		}
 	    }
-            printf("DEBUG here 2\n");
 
 	    mtx_unlock(&tuple_space->tuples_mtx);
 	    break;

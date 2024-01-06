@@ -54,6 +54,7 @@ void server_run(Server* server) {
         printf("%s Received message from %s: %s\n", formatted_timestamp(), address_to_text(*(struct sockaddr_in*)(&inbound_message.sender_address)), message_to_string_short(inbound_message.message));
 
         server_handle_inbound_message_nonblocking(server, inbound_message);
+        server_process_blocked_get_requests(server);
 
     }
 }
