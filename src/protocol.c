@@ -130,7 +130,7 @@ size_t message_serialised_length(Message message) {
     return size;
 }
 
-void message_println(Message message) {
+void message_debug_println(Message message) {
     char const* type_name =
 	message.type == message_ack ? "ACK": 
 	message.type == message_tuple_space_insert_request ? "TUPLE SPACE INSERT REQUEST":
@@ -170,4 +170,55 @@ void message_println(Message message) {
     }
 
     printf("    }\n}\n");
+}
+
+
+char const* message_to_string_short(Message message) {
+    static thread_local char buffer[2048];
+
+    char const* type_name =
+	message.type == message_ack ? "ACK": 
+	message.type == message_tuple_space_insert_request ? "TUPLE SPACE INSERT REQUEST":
+	message.type == message_tuple_space_get_request ? "TUPLE SPACE GET REQUEST":
+	message.type == message_tuple_space_get_reply ? "TUPLE SPACE GET REPLY": 
+	"INVALID";
+
+    switch (message.type) {
+	case message_ack: 
+	    snprintf(buffer, sizeof(buffer), "%s: id=%u", type_name, message.data.ack.message_id); 
+	    break;
+
+	case message_tuple_space_insert_request:
+	    snprintf(buffer, sizeof(buffer), "%s: %s", type_name, tuple_to_string(message.data.tuple_space_insert_request.tuple)); 
+	    break;
+
+	case message_tuple_space_get_request:
+            char const* blocking_mode = 
+                message.data.tuple_space_get_request.blocking_mode == tuple_space_blocking ? "blocking":
+                message.data.tuple_space_get_request.blocking_mode == tuple_space_nonblocking ? "nonblocking":
+                "invalid blocking mode";
+
+            char const* remove_policy = 
+                message.data.tuple_space_get_request.remove_policy == tuple_space_remove ? "remove":
+                message.data.tuple_space_get_request.remove_policy == tuple_space_keep ? "keep":
+                "invalid remove policy";
+
+	    snprintf(buffer, sizeof(buffer), "%s: %s %s %s", type_name, tuple_to_string(message.data.tuple_space_get_request.tuple_template), blocking_mode, remove_policy); 
+	    break;
+
+	case message_tuple_space_get_reply:
+            char const* status = 
+                message.data.tuple_space_get_reply.result.status == tuple_space_success ? "success":
+                message.data.tuple_space_get_reply.result.status == tuple_space_failure ? "failure":
+                "invalid status";
+
+	    snprintf(buffer, sizeof(buffer), "%s: %s %s", type_name, tuple_to_string(message.data.tuple_space_get_reply.result.tuple), status); 
+	    break;
+
+	default: 
+	    snprintf(buffer, sizeof(buffer), "%s", type_name);
+	    break;
+    }
+
+    return buffer;
 }

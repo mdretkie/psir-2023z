@@ -111,40 +111,45 @@ bool tuple_match(Tuple t1, Tuple t2) {
 
 
 
-void tuple_print(Tuple tuple) {
-    printf("(");
+void tuple_to_string(Tuple tuple) {
+    static thread_local char buffer[2048];
+    int offset = snprintf(buffer, sizeof(buffer), "(");
 
     for (size_t idx = 0; idx < tuple.element_count; ++idx) {
 	switch (tuple.elements[idx].type) {
 	    case tuple_int:
-		printf("%d", tuple_get_int(tuple, idx));
+                offset += snprintf(buffer + offset, sizeof(buffer), "%d", tuple_get_int(tuple, idx));
 		break;
 
 	    case tuple_float:
-		printf("%g", tuple_get_float(tuple, idx));
+                offset += snprintf(buffer + offset, sizeof(buffer), "%g", tuple_get_float(tuple, idx));
 		break;
 
 	    case tuple_string:
-		printf("\"%s\"", tuple_get_string(tuple, idx));
+                offset += snprintf(buffer + offset, sizeof(buffer), "\"%s\"", tuple_get_string(tuple, idx));
 		break;
 
 	    case tuple_int_template:
-		printf("int?");
+                offset += snprintf(buffer + offset, sizeof(buffer), "int?");
 		break;
 
 	    case tuple_float_template:
-		printf("float?");
+                offset += snprintf(buffer + offset, sizeof(buffer), "float?");
 		break;
 
 	    case tuple_string_template:
-		printf("string?");
+                offset += snprintf(buffer + offset, sizeof(buffer), "string?");
 		break;
 	}
 	
-	if (idx < tuple.element_count - 1) printf(", ");
+	if (idx < tuple.element_count - 1) {
+            offset += snprintf(buffer + offset, sizeof(buffer), ", ");
+        }
     }
 
-    printf(")");
+    snprintf(buffer, sizeof(buffer), ")");
+
+    return buffer;
 }
 
 
@@ -270,9 +275,3 @@ size_t tuple_serialised_length(Tuple tuple) {
     return buffer_size;
 }
 
-
-
-void tuple_println(Tuple tuple) {
-    tuple_print(tuple);
-    printf("\n");
-}

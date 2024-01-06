@@ -48,7 +48,6 @@ char* tuple_serialise(Tuple tuple, char* buffer);
 char const* tuple_deserialise(Tuple* tuple, char const* buffer);
 size_t tuple_serialised_length(Tuple tuple);
 
-void tuple_print(Tuple tuple);
-void tuple_println(Tuple tuple);
+void tuple_to_string(Tuple tuple);
 
 #endif
