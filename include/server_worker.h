@@ -1,3 +1,4 @@
+/*
 #include <threads.h>
 
 typedef struct WorkerThreadArgs {
@@ -37,3 +38,4 @@ void server_worker_pool_submit_inbound_message(ServerWorkerPool* pool, InboundMe
 
 int worker_thread_fn(void* args_);
 
+*/

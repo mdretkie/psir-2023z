@@ -1,3 +1,4 @@
+/*
 #include "server_worker.h"
 
 ServerWorker server_worker_new(struct sockaddr remote_address) {
@@ -59,3 +60,4 @@ int worker_thread_fn(void* args_) {
     return 0;
 }
 
+*/
