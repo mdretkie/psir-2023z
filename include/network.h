@@ -47,6 +47,7 @@ void network_push_inbound_data(Network* network, char const* data, size_t data_l
 bool network_take_any_complete_message(Network* network, InboundMessage* inbound_message_result);
 InboundMessage network_receive_message_blocking(Network* network);
 void network_send_and_free_message(Network* network, OutboundMessage message);
+void network_send_and_free_message_no_ack(Network* network, OutboundMessage message);
 
 
 #endif

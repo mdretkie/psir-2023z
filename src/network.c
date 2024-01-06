@@ -128,6 +128,17 @@ static void network_ack_inbound_message(Network* network, InboundMessage const* 
 }
 
 
+static void network_receive_ack_for_outbound_message(Network* network, OutboundMessage const* outbound_message) {
+    InboundMessage inbound_message = network_receive_message_blocking(network);
+
+    if (inbound_message.message.type == message_ack && inbound_message.message.data.ack.message_id == outbound_message->message.id) {
+        return;
+    } else {
+        printf("ACK for message with id: %u has been lost\n", outbound_message->message.id);
+    }
+}
+
+
 InboundMessage network_receive_message_blocking(Network* network) {
     char buffer[64];
 
@@ -171,8 +182,7 @@ static void sendto_all(int so, char* buffer, size_t buffer_size, struct sockaddr
 }
 
 
-void network_send_and_free_message(Network* network, OutboundMessage message) {
-    (void)network;
+void network_send_and_free_message_no_ack(Network* network, OutboundMessage message) {
     uint32_t bytes_length = message_serialised_length(&message.message);
     char* bytes = message_serialise_and_free(message.message);
     sendto_all(network->so, (char*)&bytes_length, sizeof(bytes_length), *(struct sockaddr_in*)(&message.receiver_address));
@@ -181,3 +191,10 @@ void network_send_and_free_message(Network* network, OutboundMessage message) {
 }
 
 
+void network_send_and_free_message(Network* network, OutboundMessage message) {
+    network_send_and_free_message_no_ack(network, message);
+
+    if (message.message.type != message_ack) {
+        network_receive_ack_for_outbound_message(network, &message);
+    }
+}

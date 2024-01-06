@@ -104,7 +104,7 @@ void server_handle_inbound_message_nonblocking(Server* server, InboundMessage in
                 .receiver_address = inbound_message.sender_address,
             };
 
-            network_send_and_free_message(&server->network, outbound_message);
+            network_send_and_free_message_no_ack(&server->network, outbound_message);
             break;
     }
 }
@@ -143,7 +143,7 @@ void server_process_blocked_get_requests(Server* server) {
                 .receiver_address = server->blocked_get_requests[i].sender_address,
             };
 
-            network_send_and_free_message(&server->network, outbound_message);
+            network_send_and_free_message_no_ack(&server->network, outbound_message);
 
             server->blocked_get_requests[i] = server->blocked_get_requests[server->blocked_get_request_count - 1];
             server->blocked_get_requests = realloc(server->blocked_get_requests, (server->blocked_get_request_count - 1) * sizeof(InboundMessage));
