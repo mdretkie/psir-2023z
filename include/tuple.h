@@ -38,16 +38,16 @@ typedef struct Tuple {
 Tuple tuple_new(uint32_t element_count, ...);
 void tuple_free(Tuple tuple);
 
-int tuple_get_int(Tuple tuple, size_t index);
-float tuple_get_float(Tuple tuple, size_t index);
-char const* tuple_get_string(Tuple tuple, size_t index);
+int tuple_get_int(Tuple const* tuple, size_t index);
+float tuple_get_float(Tuple const* tuple, size_t index);
+char const* tuple_get_string(Tuple const* tuple, size_t index);
 
-bool tuple_match(Tuple t1, Tuple t2);
+bool tuple_match(Tuple const* t1, Tuple const* t2);
 
-char* tuple_serialise(Tuple tuple, char* buffer);
+char* tuple_serialise(Tuple const* tuple, char* buffer);
 char const* tuple_deserialise(Tuple* tuple, char const* buffer);
-size_t tuple_serialised_length(Tuple tuple);
+size_t tuple_serialised_length(Tuple const* tuple);
 
-char const* tuple_to_string(Tuple tuple);
+char const* tuple_to_string(Tuple const* tuple);
 
 #endif

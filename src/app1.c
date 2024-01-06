@@ -102,7 +102,7 @@ MasterResult master_query_result(Network* network, int server_socket, MasterArgs
         case tuple_space_success: {
             MasterResult result = {
                 .retrieved = true,
-                .i = tuple_get_int(inbound_message.message.data.tuple_space_get_reply.result.tuple, 1),
+                .i = tuple_get_int(&inbound_message.message.data.tuple_space_get_reply.result.tuple, 1),
             };
             return result;
         }
@@ -224,7 +224,7 @@ int worker_fn(void* args_) {
             continue;
         }
 
-        int i = tuple_get_int(inbound_message.message.data.tuple_space_get_reply.result.tuple, 1);
+        int i = tuple_get_int(&inbound_message.message.data.tuple_space_get_reply.result.tuple, 1);
 
         printf("%s [W%d] Processing request for n = %d\n", formatted_timestamp(), args.worker_id, i);
 

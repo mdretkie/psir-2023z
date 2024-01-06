@@ -62,7 +62,7 @@ TupleSpaceOperationResult tuple_space_get(TupleSpace* tuple_space, Tuple tuple_t
 
 	    for (;;) {
 		for (size_t idx = 0; idx < tuple_space->tuple_count; ++idx) {
-		    if (tuple_match(tuple_template, tuple_space->tuples[idx])) {
+		    if (tuple_match(&tuple_template, &tuple_space->tuples[idx])) {
 			result.status = tuple_space_success;
 			result.tuple = tuple_space_get_helper(tuple_space, idx, remove_policy);
 			break;
@@ -84,7 +84,7 @@ TupleSpaceOperationResult tuple_space_get(TupleSpace* tuple_space, Tuple tuple_t
 	    mtx_lock(&tuple_space->tuples_mtx);
 
 	    for (size_t idx = 0; idx < tuple_space->tuple_count; ++idx) {
-		if (tuple_match(tuple_template, tuple_space->tuples[idx])) {
+		if (tuple_match(&tuple_template, &tuple_space->tuples[idx])) {
 		    result.status = tuple_space_success;
 		    result.tuple = tuple_space_get_helper(tuple_space, idx, remove_policy);
 		    break;

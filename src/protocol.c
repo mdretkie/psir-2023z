@@ -27,13 +27,13 @@ char* message_serialise_and_free(Message message) {
 	    break;
 
 	case message_tuple_space_insert_request:
-	    buffer = tuple_serialise(message.data.tuple_space_insert_request.tuple, buffer);
+	    buffer = tuple_serialise(&message.data.tuple_space_insert_request.tuple, buffer);
 
 	    tuple_free(message.data.tuple_space_insert_request.tuple);
 	    break;
 
 	case message_tuple_space_get_request:
-	    buffer = tuple_serialise(message.data.tuple_space_get_request.tuple_template, buffer);
+	    buffer = tuple_serialise(&message.data.tuple_space_get_request.tuple_template, buffer);
 	    memcpy(buffer, &message.data.tuple_space_get_request.blocking_mode, sizeof(message.data.tuple_space_get_request.blocking_mode));
 	    buffer += sizeof(message.data.tuple_space_get_request.blocking_mode);
 	    memcpy(buffer, &message.data.tuple_space_get_request.remove_policy, sizeof(message.data.tuple_space_get_request.remove_policy));
@@ -45,7 +45,7 @@ char* message_serialise_and_free(Message message) {
 	case message_tuple_space_get_reply:
 	    memcpy(buffer, &message.data.tuple_space_get_reply.result.status, sizeof(message.data.tuple_space_get_reply.result.status));
 	    buffer += sizeof(message.data.tuple_space_get_reply.result.status);
-	    buffer = tuple_serialise(message.data.tuple_space_get_reply.result.tuple, buffer);
+	    buffer = tuple_serialise(&message.data.tuple_space_get_reply.result.tuple, buffer);
 
 	    tuple_free(message.data.tuple_space_get_reply.result.tuple);
 	    break;
@@ -112,17 +112,17 @@ size_t message_serialised_length(Message message) {
 	    break;
 
 	case message_tuple_space_insert_request:
-	    size += tuple_serialised_length(message.data.tuple_space_insert_request.tuple);
+	    size += tuple_serialised_length(&message.data.tuple_space_insert_request.tuple);
 	    break;
 
 	case message_tuple_space_get_request:
-	    size += tuple_serialised_length(message.data.tuple_space_get_request.tuple_template) +
+	    size += tuple_serialised_length(&message.data.tuple_space_get_request.tuple_template) +
 		sizeof(message.data.tuple_space_get_request.blocking_mode) +
 		sizeof(message.data.tuple_space_get_request.remove_policy);
 	    break;
 
 	case message_tuple_space_get_reply:
-	     size += tuple_serialised_length(message.data.tuple_space_get_reply.result.tuple) +
+	     size += tuple_serialised_length(&message.data.tuple_space_get_reply.result.tuple) +
 		sizeof(message.data.tuple_space_get_reply.result.status);
 	    break;
     }
@@ -191,7 +191,7 @@ char const* message_to_string_short(Message message) {
 	    break;
 
 	case message_tuple_space_insert_request:
-	    snprintf(buffer, sizeof(buffer), "%s: %s", type_name, tuple_to_string(message.data.tuple_space_insert_request.tuple)); 
+	    snprintf(buffer, sizeof(buffer), "%s: %s", type_name, tuple_to_string(&message.data.tuple_space_insert_request.tuple)); 
 	    break;
 
 	case message_tuple_space_get_request:
@@ -207,7 +207,7 @@ char const* message_to_string_short(Message message) {
                 message.data.tuple_space_get_request.remove_policy == tuple_space_keep ? "keep":
                 "invalid remove policy";
 
-	    snprintf(buffer, sizeof(buffer), "%s: %s %s %s", type_name, tuple_to_string(message.data.tuple_space_get_request.tuple_template), blocking_mode, remove_policy); 
+	    snprintf(buffer, sizeof(buffer), "%s: %s %s %s", type_name, tuple_to_string(&message.data.tuple_space_get_request.tuple_template), blocking_mode, remove_policy); 
 	    break;
 
 	case message_tuple_space_get_reply:
@@ -218,7 +218,7 @@ char const* message_to_string_short(Message message) {
                 message.data.tuple_space_get_reply.result.status == tuple_space_failure ? "failure":
                 "invalid status";
 
-	    snprintf(buffer, sizeof(buffer), "%s: %s %s", type_name, tuple_to_string(message.data.tuple_space_get_reply.result.tuple), status); 
+	    snprintf(buffer, sizeof(buffer), "%s: %s %s", type_name, tuple_to_string(&message.data.tuple_space_get_reply.result.tuple), status); 
 	    break;
 
 	default: 
