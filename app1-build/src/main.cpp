@@ -16,9 +16,7 @@ void setup() {
 	tuple_string_template
 	);
 
-    /*
     Serial.println(tuple_to_string(&t));
-    */
 
 }
 
@@ -31,3 +29,4 @@ void loop() {
 
 
 #include "tuple.c"
+#include "common.c"

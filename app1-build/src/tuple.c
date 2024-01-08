@@ -17,7 +17,9 @@ Tuple tuple_new(uint32_t element_count, ...) {
     };
 
     for (size_t idx = 0; idx < element_count; ++idx) {
-	TupleElementType element_type = va_arg(args, TupleElementType);
+	/* TupleElementType jest promowany do inta. */
+	// TupleElementType element_type = va_arg(args, TupleElementType);
+	TupleElementType element_type = (TupleElementType)va_arg(args, int);
 
 	TupleElement element = {
 	    .type = element_type,
