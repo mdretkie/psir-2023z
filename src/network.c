@@ -147,7 +147,7 @@ InboundMessage network_receive_message_blocking(Network* network) { }
 #else
 
 InboundMessage network_receive_message_blocking(Network* network) {
-    char buffer[64];
+    char buffer[1024];
 
     for(;;) {
         SOCKADDR sender_address;
@@ -179,7 +179,9 @@ InboundMessage network_receive_message_blocking(Network* network) {
 
 #ifdef PSIR_ARDUINO
 
-static void sendto_all(int so, char* buffer, size_t buffer_size, SOCKADDR_IN receiver_address) { }
+static void sendto_all(int so, char* buffer, size_t buffer_size, SOCKADDR_IN receiver_address) { 
+
+}
 
 #else
 

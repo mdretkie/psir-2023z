@@ -5,14 +5,14 @@
 #include "arduino.h"
 
 #ifdef PSIR_ARDUINO
-#define SOCKADDR char
-#define SOCKADDR_IN char
+	#define SOCKADDR char
+	#define SOCKADDR_IN char
 #else
-#include <netinet/in.h>
-#include <arpa/inet.h>
-#include <sys/socket.h>
-#define SOCKADDR struct sockaddr
-#define SOCKADDR_IN struct sockaddr_in
+	#include <netinet/in.h>
+	#include <arpa/inet.h>
+	#include <sys/socket.h>
+	#define SOCKADDR struct sockaddr
+	#define SOCKADDR_IN struct sockaddr_in
 #endif
 
 

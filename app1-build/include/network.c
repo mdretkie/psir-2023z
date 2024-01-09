@@ -147,7 +147,7 @@ InboundMessage network_receive_message_blocking(Network* network) { }
 #else
 
 InboundMessage network_receive_message_blocking(Network* network) {
-    char buffer[64];
+    char buffer[1024];
 
     for(;;) {
         SOCKADDR sender_address;
