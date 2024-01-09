@@ -25,7 +25,7 @@ Server server_new() {
     struct sockaddr_in listen_address;
     memset(&listen_address, 0, sizeof(listen_address));
     listen_address.sin_family = AF_INET;
-    listen_address.sin_port = htons(12345);
+    listen_address.sin_port = htons(12344);
     listen_address.sin_addr.s_addr = htonl(INADDR_ANY);
 
     if (bind(so, (struct sockaddr*)&listen_address, sizeof(listen_address)) < 0) {

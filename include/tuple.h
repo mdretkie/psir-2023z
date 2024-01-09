@@ -19,7 +19,7 @@ typedef enum TupleElementType {
 } TupleElementType;
 
 typedef union TupleElementData {
-    int data_int;
+    int32_t data_int;
     float data_float;
     char* data_string;
 } TupleElementData;
@@ -38,7 +38,7 @@ typedef struct Tuple {
 Tuple tuple_new(uint32_t element_count, ...);
 void tuple_free(Tuple tuple);
 
-int tuple_get_int(Tuple const* tuple, size_t index);
+int32_t tuple_get_int(Tuple const* tuple, size_t index);
 float tuple_get_float(Tuple const* tuple, size_t index);
 char const* tuple_get_string(Tuple const* tuple, size_t index);
 

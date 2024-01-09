@@ -110,6 +110,10 @@ void network_push_inbound_data(Network* network, char const* data, size_t data_l
 bool network_take_any_complete_message(Network* network, InboundMessage* inbound_message_result) {
     for (size_t i = 0; i < network->inbound_buffer_count; ++i) {
         if (inbound_buffer_has_complete_message(&network->inbound_buffers[i])) {
+
+            printf("DEBUG len: %d\n", *(int*)network->inbound_buffers[i].buffer);
+            printf("DEBUG type: %d\n", *(int*)network->inbound_buffers[i].buffer);
+
             *inbound_message_result = inbound_buffer_take_complete_message(&network->inbound_buffers[i]);
             return true;
         }
@@ -145,7 +149,9 @@ static void network_receive_ack_for_outbound_message(Network* network, OutboundM
         return;
     } else {
 	#ifdef PSIR_ARDUINO
-        printf("ACK for message with id: %u has been lost\n", (short)outbound_message->message.id);
+        Serial.print(F("ACK for message with id: "));
+        Serial.print(outbound_message->message.id);
+        Serial.println(F(" has been lost"));
 	#else
         printf("ACK for message with id: %u has been lost\n", outbound_message->message.id);
 	#endif

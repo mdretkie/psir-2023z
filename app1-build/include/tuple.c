@@ -37,7 +37,7 @@ Tuple tuple_new(uint32_t element_count, ...) {
 
 	switch (element_type) {
 	    case tuple_int:
-		element.data.data_int = va_arg(args, int);
+		element.data.data_int = va_arg(args, int32_t);
 		break;
 
 	    case tuple_float: 
@@ -75,7 +75,7 @@ void tuple_free(Tuple tuple) {
     free(tuple.elements);
 }
 
-int tuple_get_int(Tuple const* tuple, size_t index) {
+int32_t tuple_get_int(Tuple const* tuple, size_t index) {
     return tuple->elements[index].data.data_int;
 }
 
@@ -138,7 +138,11 @@ char const* tuple_to_string(Tuple const* tuple) {
     for (size_t idx = 0; idx < tuple->element_count; ++idx) {
 	switch (tuple->elements[idx].type) {
 	    case tuple_int:
+                #ifdef PSIR_ARDUINO
+                offset += snprintf(buffer + offset, sizeof(buffer), "%d", (int)tuple_get_int(tuple, idx));
+                #else
                 offset += snprintf(buffer + offset, sizeof(buffer), "%d", tuple_get_int(tuple, idx));
+                #endif
 		break;
 
 	    case tuple_float:

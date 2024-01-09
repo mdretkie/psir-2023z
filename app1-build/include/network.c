@@ -145,7 +145,9 @@ static void network_receive_ack_for_outbound_message(Network* network, OutboundM
         return;
     } else {
 	#ifdef PSIR_ARDUINO
-        printf("ACK for message with id: %u has been lost\n", (short)outbound_message->message.id);
+        Serial.print(F("ACK for message with id: "));
+        Serial.print(outbound_message->message.id);
+        Serial.println(F(" has been lost"));
 	#else
         printf("ACK for message with id: %u has been lost\n", outbound_message->message.id);
 	#endif
