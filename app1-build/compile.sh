@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 set -e
-cp ../include/{tuple,common,thread_local,tuple_space,protocol}.h  include/
-cp ../src/{tuple,common,protocol}.c src/
-rm -r .pio
+rm include/*
+echo '#define PSIR_ARDUINO' > include/arduino.h
+cp ../include/{tuple,common,tuple_space,protocol}.h  include/
+cp ../src/{tuple,common,protocol}.c include/
+# rm -r .pio
 platformio run

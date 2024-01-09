@@ -3,7 +3,10 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
-#include "thread_local.h"
+#include "arduino.h"
+#ifndef PSIR_ARDUINO
+#include <threads.h>
+#endif
 
 // TODO: endianness
 
@@ -16,10 +19,13 @@ Tuple tuple_new(uint32_t element_count, ...) {
 	.elements = (TupleElement*)malloc(element_count * sizeof(TupleElement))
     };
 
+
     for (size_t idx = 0; idx < element_count; ++idx) {
-	/* TupleElementType jest promowany do inta. */
-	// TupleElementType element_type = va_arg(args, TupleElementType);
-	TupleElementType element_type = (TupleElementType)va_arg(args, int);
+	#ifdef PSIR_ARDUINO
+	TupleElementType element_type = va_arg(args, int);
+	#else
+	TupleElementType element_type = va_arg(args, TupleElementType);
+	#endif
 
 	TupleElement element = {
 	    .type = element_type,
@@ -48,7 +54,9 @@ Tuple tuple_new(uint32_t element_count, ...) {
 	tuple.elements[idx] = element;
     }
 
+
     va_end(args);
+
 
     return tuple;
 }
@@ -115,7 +123,12 @@ bool tuple_match(Tuple const* t1, Tuple const* t2) {
 
 
 char const* tuple_to_string(Tuple const* tuple) {
+    #ifdef PSIR_ARDUINO
+    static char buffer[32];
+    #else
     static thread_local char buffer[2048];
+    #endif
+
     int offset = snprintf(buffer, sizeof(buffer), "(");
 
     for (size_t idx = 0; idx < tuple->element_count; ++idx) {
@@ -149,6 +162,7 @@ char const* tuple_to_string(Tuple const* tuple) {
             offset += snprintf(buffer + offset, sizeof(buffer), ", ");
         }
     }
+
 
     snprintf(buffer + offset, sizeof(buffer), ")");
 
