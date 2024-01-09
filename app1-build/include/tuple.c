@@ -220,7 +220,6 @@ static char* tuple_element_serialise(TupleElement element, char* buffer) {
 
 static char const* tuple_element_deserialise(TupleElement* element, char const* buffer) {
     buffer = deserialise_u32(buffer, &element->type);
-    printf("DEBUG element type: %d\n", (uint32_t)element->type);
 
     if (element->type & tuple_element_type_template_bit) {
 	return buffer;

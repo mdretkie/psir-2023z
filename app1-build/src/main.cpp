@@ -28,7 +28,7 @@ void setup() {
     TupleElement element1 = {
         .type = tuple_string,
         .data = {
-            .data_string = alloc_string("b"),
+            .data_string = alloc_string("bcde"),
         },
     };
 
@@ -45,8 +45,6 @@ void setup() {
 
 
     Serial.println(tuple_to_string(&tuple));
-
-
 
 
     Network network = network_new(0);

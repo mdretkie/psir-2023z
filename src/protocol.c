@@ -127,10 +127,13 @@ size_t message_serialised_length(Message const* message) {
     return size;
 }
 
-#ifndef PSIR_ARDUINO
 
 char const* message_to_string_short(Message const* message) {
+    #ifdef PSIR_ARDUINO
+    static char buffer[64];
+    #else
     static thread_local char buffer[2048];
+    #endif
 
     char const* type_name =
 	message->type == message_ack ? "ACK": 
@@ -140,15 +143,24 @@ char const* message_to_string_short(Message const* message) {
 	"INVALID";
 
     switch (message->type) {
-	case message_ack: 
+	case message_ack: {
+            #ifdef PSIR_ARDUINO
+	    snprintf(buffer, sizeof(buffer), "(id: %u) %s: %u", (unsigned)message->id, type_name, (unsigned)message->data.ack.message_id); 
+            #else
 	    snprintf(buffer, sizeof(buffer), "(id: %u) %s: %u", message->id, type_name, message->data.ack.message_id); 
+            #endif
 	    break;
 
 	case message_tuple_space_insert_request:
+            #ifdef PSIR_ARDUINO
+	    snprintf(buffer, sizeof(buffer), "(id: %u) %s: %s", (unsigned)message->id, type_name, tuple_to_string(&message->data.tuple_space_insert_request.tuple)); 
+            #else
 	    snprintf(buffer, sizeof(buffer), "(id: %u) %s: %s", message->id, type_name, tuple_to_string(&message->data.tuple_space_insert_request.tuple)); 
+            #endif
 	    break;
+        }
 
-	case message_tuple_space_get_request:
+	case message_tuple_space_get_request: {
             (void)0;
 
             char const* blocking_mode = 
@@ -161,10 +173,15 @@ char const* message_to_string_short(Message const* message) {
                 message->data.tuple_space_get_request.remove_policy == tuple_space_keep ? "keep":
                 "invalid remove policy";
 
+            #ifdef PSIR_ARDUINO
+	    snprintf(buffer, sizeof(buffer), "(id: %u) %s: %s %s %s", (unsigned)message->id, type_name, tuple_to_string(&message->data.tuple_space_get_request.tuple_template), blocking_mode, remove_policy); 
+            #else
 	    snprintf(buffer, sizeof(buffer), "(id: %u) %s: %s %s %s", message->id, type_name, tuple_to_string(&message->data.tuple_space_get_request.tuple_template), blocking_mode, remove_policy); 
+            #endif
 	    break;
+        }
 
-	case message_tuple_space_get_reply:
+	case message_tuple_space_get_reply: {
             (void)0;
             
             char const* status = 
@@ -172,15 +189,24 @@ char const* message_to_string_short(Message const* message) {
                 message->data.tuple_space_get_reply.result.status == tuple_space_failure ? "failure":
                 "invalid status";
 
+            #ifdef PSIR_ARDUINO
+	    snprintf(buffer, sizeof(buffer), "(id: %u) %s: %s %s", (unsigned)message->id, type_name, tuple_to_string(&message->data.tuple_space_get_reply.result.tuple), status); 
+            #else
 	    snprintf(buffer, sizeof(buffer), "(id: %u) %s: %s %s", message->id, type_name, tuple_to_string(&message->data.tuple_space_get_reply.result.tuple), status); 
+            #endif
 	    break;
+        }
 
-	default: 
+	default: {
+            #ifdef PSIR_ARDUINO
+	    snprintf(buffer, sizeof(buffer), "(id: %u) %s", (unsigned)message->id, type_name);
+            #else
 	    snprintf(buffer, sizeof(buffer), "(id: %u) %s", message->id, type_name);
+            #endif
 	    break;
+        }
     }
 
     return buffer;
 }
 
-#endif
