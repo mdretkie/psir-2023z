@@ -5,6 +5,9 @@
 #include <time.h>
 #include <stdio.h>
 #include "arduino.h"
+#ifndef PSIR_ARDUINO
+#include <threads.h>
+#endif
 
 
 char* alloc_string(char const* string) {

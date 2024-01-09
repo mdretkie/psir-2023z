@@ -22,13 +22,17 @@ Tuple tuple_new(uint32_t element_count, ...) {
 
     for (size_t idx = 0; idx < element_count; ++idx) {
 	#ifdef PSIR_ARDUINO
-	TupleElementType element_type = va_arg(args, int);
+	int element_type = va_arg(args, int);
 	#else
 	TupleElementType element_type = va_arg(args, TupleElementType);
 	#endif
 
 	TupleElement element = {
+	    #ifdef PSIR_ARDUINO
+	    .type = (TupleElementType)element_type,
+	    #else
 	    .type = element_type,
+	    #endif
 	};
 
 	switch (element_type) {
@@ -138,7 +142,11 @@ char const* tuple_to_string(Tuple const* tuple) {
 		break;
 
 	    case tuple_float:
+                #ifdef PSIR_ARDUINO
+                offset += snprintf(buffer + offset, sizeof(buffer), "%g", (double)tuple_get_float(tuple, idx));
+		#else
                 offset += snprintf(buffer + offset, sizeof(buffer), "%g", tuple_get_float(tuple, idx));
+		#endif
 		break;
 
 	    case tuple_string:

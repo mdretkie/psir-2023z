@@ -2,7 +2,10 @@
 #include <ZsutFeatures.h>
 #include <stdio.h>
 
-#include "tuple.h"
+#include "tuple.c"
+#include "common.c"
+#include "protocol.c"
+#include "network.c"
 
 #define LED     ZSUT_PIN_D2
 
@@ -28,6 +31,3 @@ void loop() {
 }
 
 
-#include "tuple.c"
-#include "common.c"
-#include "protocol.c"
