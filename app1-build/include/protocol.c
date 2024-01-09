@@ -1,4 +1,5 @@
 #include "protocol.h"
+#include "common.h"
 #include <stdio.h>
 #include <string.h>
 #include "arduino.h"
@@ -22,16 +23,12 @@ char* message_serialise_and_free(Message message) {
     char* buffer_start = (char*)malloc(message_serialised_length(&message));
     char* buffer = buffer_start;
 
-    memcpy(buffer, &message.id, sizeof(message.id));
-    buffer += sizeof(message.id);
-
-    memcpy(buffer, &message.type, sizeof(message.type));
-    buffer += sizeof(message.type);
+    buffer = serialise_u32(buffer, message.id);
+    buffer = serialise_u32(buffer, message.type);
 
     switch (message.type) {
 	case message_ack: 
-	    memcpy(buffer, &message.data.ack.message_id, sizeof(message.data.ack.message_id));
-	    buffer += sizeof(message.data.ack.message_id);
+            buffer = serialise_u32(buffer, message.data.ack.message_id);
 	    break;
 
 	case message_tuple_space_insert_request:
@@ -42,17 +39,14 @@ char* message_serialise_and_free(Message message) {
 
 	case message_tuple_space_get_request:
 	    buffer = tuple_serialise(&message.data.tuple_space_get_request.tuple_template, buffer);
-	    memcpy(buffer, &message.data.tuple_space_get_request.blocking_mode, sizeof(message.data.tuple_space_get_request.blocking_mode));
-	    buffer += sizeof(message.data.tuple_space_get_request.blocking_mode);
-	    memcpy(buffer, &message.data.tuple_space_get_request.remove_policy, sizeof(message.data.tuple_space_get_request.remove_policy));
-	    buffer += sizeof(message.data.tuple_space_get_request.remove_policy);
+            buffer = serialise_u32(buffer, message.data.tuple_space_get_request.blocking_mode);
+            buffer = serialise_u32(buffer, message.data.tuple_space_get_request.remove_policy);
 
 	    tuple_free(message.data.tuple_space_get_request.tuple_template);
 	    break;
 
 	case message_tuple_space_get_reply:
-	    memcpy(buffer, &message.data.tuple_space_get_reply.result.status, sizeof(message.data.tuple_space_get_reply.result.status));
-	    buffer += sizeof(message.data.tuple_space_get_reply.result.status);
+            buffer = serialise_u32(buffer, message.data.tuple_space_get_reply.result.status);
 	    buffer = tuple_serialise(&message.data.tuple_space_get_reply.result.tuple, buffer);
 
 	    tuple_free(message.data.tuple_space_get_reply.result.tuple);
@@ -69,16 +63,12 @@ Message message_deserialise_no_free(char* buffer_) {
 
     Message message;
 
-    memcpy(&message.id, buffer, sizeof(message.id));
-    buffer += sizeof(message.id);
-
-    memcpy(&message.type, buffer, sizeof(message.type));
-    buffer += sizeof(message.type);
+    buffer = deserialise_u32(buffer, &message.id);
+    buffer = deserialise_u32(buffer, &message.type);
 
     switch (message.type) {
 	case message_ack: 
-	    memcpy(&message.data.ack.message_id, buffer, sizeof(message.data.ack.message_id));
-	    buffer += sizeof(message.data.ack.message_id);
+            buffer = deserialise_u32(buffer, &message.data.ack.message_id);
 	    break;
 
 	case message_tuple_space_insert_request:
@@ -87,15 +77,12 @@ Message message_deserialise_no_free(char* buffer_) {
 
 	case message_tuple_space_get_request:
 	    buffer = tuple_deserialise(&message.data.tuple_space_get_request.tuple_template, buffer);
-	    memcpy(&message.data.tuple_space_get_request.blocking_mode, buffer, sizeof(message.data.tuple_space_get_request.blocking_mode));
-	    buffer += sizeof(message.data.tuple_space_get_request.blocking_mode);
-	    memcpy(&message.data.tuple_space_get_request.remove_policy, buffer, sizeof(message.data.tuple_space_get_request.remove_policy));
-	    buffer += sizeof(message.data.tuple_space_get_request.remove_policy);
+            buffer = deserialise_u32(buffer, &message.data.tuple_space_get_request.blocking_mode);
+            buffer = deserialise_u32(buffer, &message.data.tuple_space_get_request.remove_policy);
 	    break;
 
 	case message_tuple_space_get_reply:
-	    memcpy(&message.data.tuple_space_get_reply.result.status, buffer, sizeof(message.data.tuple_space_get_reply.result.status));
-	    buffer += sizeof(message.data.tuple_space_get_reply.result.status);
+            buffer = deserialise_u32(buffer, &message.data.tuple_space_get_reply.result.status);
 	    buffer = tuple_deserialise(&message.data.tuple_space_get_reply.result.tuple, buffer);
 	    break;
     }
@@ -111,12 +98,12 @@ Message message_deserialise_and_free(char* buffer_) {
 
 size_t message_serialised_length(Message const* message) {
     size_t size = 
-	sizeof(message->id) + 
-	sizeof(message->type);
+	sizeof((uint32_t)message->id) + 
+	sizeof((uint32_t)message->type);
 
     switch (message->type) {
 	case message_ack: 
-	    size += sizeof(message->data.ack.message_id); 
+	    size += sizeof((uint32_t)message->data.ack.message_id); 
 	    break;
 
 	case message_tuple_space_insert_request:
@@ -124,14 +111,16 @@ size_t message_serialised_length(Message const* message) {
 	    break;
 
 	case message_tuple_space_get_request:
-	    size += tuple_serialised_length(&message->data.tuple_space_get_request.tuple_template) +
-		sizeof(message->data.tuple_space_get_request.blocking_mode) +
-		sizeof(message->data.tuple_space_get_request.remove_policy);
+	    size += 
+                tuple_serialised_length(&message->data.tuple_space_get_request.tuple_template) +
+		sizeof((uint32_t)message->data.tuple_space_get_request.blocking_mode) +
+		sizeof((uint32_t)message->data.tuple_space_get_request.remove_policy);
 	    break;
 
 	case message_tuple_space_get_reply:
-	     size += tuple_serialised_length(&message->data.tuple_space_get_reply.result.tuple) +
-		sizeof(message->data.tuple_space_get_reply.result.status);
+	     size += 
+                 tuple_serialised_length(&message->data.tuple_space_get_reply.result.tuple) +
+		sizeof((uint32_t)message->data.tuple_space_get_reply.result.status);
 	    break;
     }
 

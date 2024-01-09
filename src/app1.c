@@ -274,7 +274,7 @@ void app1_main() {
     struct sockaddr server_address;
     memset(&server_address, 0, sizeof(server_address));
     ((struct sockaddr_in*)(&server_address))->sin_family = AF_INET;
-    ((struct sockaddr_in*)(&server_address))->sin_port = htons(12345);
+    ((struct sockaddr_in*)(&server_address))->sin_port = htons(12344);
     ((struct sockaddr_in*)(&server_address))->sin_addr = server_address_;
 
     MasterArgs master_args = {

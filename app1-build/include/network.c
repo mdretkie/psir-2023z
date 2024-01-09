@@ -110,6 +110,11 @@ void network_push_inbound_data(Network* network, char const* data, size_t data_l
 bool network_take_any_complete_message(Network* network, InboundMessage* inbound_message_result) {
     for (size_t i = 0; i < network->inbound_buffer_count; ++i) {
         if (inbound_buffer_has_complete_message(&network->inbound_buffers[i])) {
+
+            printf("DEBUG len: %d\n", *(uint32_t*)network->inbound_buffers[i].buffer);
+            printf("DEBUG id: %d\n", *(uint32_t*)(network->inbound_buffers[i].buffer + sizeof(uint32_t)));
+            printf("DEBUG type: %d\n", *(uint32_t*)(network->inbound_buffers[i].buffer + 2*sizeof(uint32_t)));
+
             *inbound_message_result = inbound_buffer_take_complete_message(&network->inbound_buffers[i]);
             return true;
         }

@@ -21,6 +21,16 @@ int random_in_range(int min, int max) {
     return rand() % (max - min) + min;
 }
 
+char* serialise_u32(char* buffer, uint32_t value) {
+    memcpy(buffer, &value, sizeof(uint32_t));
+    return buffer + sizeof(uint32_t);
+}
+
+char const* deserialise_u32(char const* buffer, void* value) {
+    memcpy(value, buffer, sizeof(uint32_t));
+    return buffer + sizeof(uint32_t);
+}
+
 #ifndef ARDUINO
 
 void sleep_ms(unsigned ms) {
@@ -50,5 +60,4 @@ char const* address_to_text(struct sockaddr_in address) {
 
     return buffer;
 }
-
 #endif

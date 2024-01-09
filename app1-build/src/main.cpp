@@ -9,15 +9,45 @@
 
 #define LED     ZSUT_PIN_D2
 
+
 void setup() {
     ZsutPinMode(LED, OUTPUT);
 
-    Tuple t = tuple_new(
-	3,
-	tuple_string, "abc",
-	tuple_int, 24,
-	tuple_string_template
-	);
+    Tuple tuple = {
+	.element_count = 3,
+	.elements = (TupleElement*)malloc(3 * sizeof(TupleElement))
+    };
+
+    TupleElement element0 = {
+        .type = tuple_int,
+        .data = {
+            .data_int = 0,
+        },
+    };
+
+    TupleElement element1 = {
+        .type = tuple_string,
+        .data = {
+            .data_string = alloc_string("b"),
+        },
+    };
+
+    TupleElement element2 = {
+        .type = tuple_string,
+        .data = {
+            .data_string = alloc_string("c"),
+        },
+    };
+
+    tuple.elements[0] = element0;
+    tuple.elements[1] = element1;
+    tuple.elements[2] = element2;
+
+
+    Serial.println(tuple_to_string(&tuple));
+
+
+
 
     Network network = network_new(0);
 
@@ -26,7 +56,7 @@ void setup() {
         .type = message_tuple_space_insert_request,
         .data = {
             .tuple_space_insert_request = {
-                .tuple = t,
+                .tuple = tuple,
             },
         },
     };

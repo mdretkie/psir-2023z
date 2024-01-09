@@ -7,12 +7,12 @@
 #include <stdint.h>
 #include <stdlib.h>
 
-#define tuple_element_type_template_bit 0x100
+#define tuple_element_type_template_bit 0x8
 
 typedef enum TupleElementType {
-    tuple_int = 1, 
-    tuple_float = 2, 
-    tuple_string = 3,
+    tuple_int,
+    tuple_float,
+    tuple_string,
     tuple_int_template = tuple_int | tuple_element_type_template_bit,
     tuple_float_template = tuple_float | tuple_element_type_template_bit,
     tuple_string_template = tuple_string | tuple_element_type_template_bit

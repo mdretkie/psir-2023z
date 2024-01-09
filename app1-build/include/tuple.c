@@ -8,8 +8,13 @@
 #include <threads.h>
 #endif
 
+
 // TODO: endianness
 
+
+#ifndef PSIR_ARDUINO
+
+/* Ten konstruktor nie działa na Arduino. */
 Tuple tuple_new(uint32_t element_count, ...) {
     va_list args;
     va_start(args, element_count);
@@ -21,18 +26,10 @@ Tuple tuple_new(uint32_t element_count, ...) {
 
 
     for (size_t idx = 0; idx < element_count; ++idx) {
-	#ifdef PSIR_ARDUINO
-	int element_type = va_arg(args, int);
-	#else
 	TupleElementType element_type = va_arg(args, TupleElementType);
-	#endif
 
 	TupleElement element = {
-	    #ifdef PSIR_ARDUINO
-	    .type = (TupleElementType)element_type,
-	    #else
 	    .type = element_type,
-	    #endif
 	};
 
 	switch (element_type) {
@@ -64,6 +61,9 @@ Tuple tuple_new(uint32_t element_count, ...) {
 
     return tuple;
 }
+
+#endif
+
 
 void tuple_free(Tuple tuple) {
     for (size_t idx = 0; idx < tuple.element_count; ++idx) {
@@ -115,10 +115,14 @@ static bool tuple_element_match(TupleElement const* e1, TupleElement const* e2) 
 
 
 bool tuple_match(Tuple const* t1, Tuple const* t2) {
-    if (t1->element_count != t2->element_count) return false;
+    if (t1->element_count != t2->element_count) {
+        return false;
+    }
 
     for (size_t idx = 0; idx < t1->element_count; ++idx) {
-	if (!tuple_element_match(&t1->elements[idx], &t2->elements[idx])) return false;
+	if (!tuple_element_match(&t1->elements[idx], &t2->elements[idx])) {
+            return false;
+        }
     }
 
     return true;
@@ -139,52 +143,51 @@ char const* tuple_to_string(Tuple const* tuple) {
 	switch (tuple->elements[idx].type) {
 	    case tuple_int:
                 #ifdef PSIR_ARDUINO
-                offset += snprintf(buffer + offset, sizeof(buffer), "%d", (int)tuple_get_int(tuple, idx));
+                offset += snprintf(buffer + offset, sizeof(buffer) - offset, "%d", (int)tuple_get_int(tuple, idx));
                 #else
-                offset += snprintf(buffer + offset, sizeof(buffer), "%d", tuple_get_int(tuple, idx));
+                offset += snprintf(buffer + offset, sizeof(buffer) - offset, "%d", tuple_get_int(tuple, idx));
                 #endif
 		break;
 
 	    case tuple_float:
                 #ifdef PSIR_ARDUINO
-                offset += snprintf(buffer + offset, sizeof(buffer), "%g", (double)tuple_get_float(tuple, idx));
+                offset += snprintf(buffer + offset, sizeof(buffer) - offset, "%g", (double)tuple_get_float(tuple, idx));
 		#else
-                offset += snprintf(buffer + offset, sizeof(buffer), "%g", tuple_get_float(tuple, idx));
+                offset += snprintf(buffer + offset, sizeof(buffer) - offset, "%g", tuple_get_float(tuple, idx));
 		#endif
 		break;
 
 	    case tuple_string:
-                offset += snprintf(buffer + offset, sizeof(buffer), "\"%s\"", tuple_get_string(tuple, idx));
+                offset += snprintf(buffer + offset, sizeof(buffer) - offset, "\"%s\"", tuple_get_string(tuple, idx));
 		break;
 
 	    case tuple_int_template:
-                offset += snprintf(buffer + offset, sizeof(buffer), "int?");
+                offset += snprintf(buffer + offset, sizeof(buffer) - offset, "int?");
 		break;
 
 	    case tuple_float_template:
-                offset += snprintf(buffer + offset, sizeof(buffer), "float?");
+                offset += snprintf(buffer + offset, sizeof(buffer) - offset, "float?");
 		break;
 
 	    case tuple_string_template:
-                offset += snprintf(buffer + offset, sizeof(buffer), "string?");
+                offset += snprintf(buffer + offset, sizeof(buffer) - offset, "string?");
 		break;
 	}
 	
 	if (idx < tuple->element_count - 1) {
-            offset += snprintf(buffer + offset, sizeof(buffer), ", ");
+            offset += snprintf(buffer + offset, sizeof(buffer) - offset, ", ");
         }
     }
 
 
-    snprintf(buffer + offset, sizeof(buffer), ")");
+    snprintf(buffer + offset, sizeof(buffer) - offset, ")");
 
     return buffer;
 }
 
 
 static char* tuple_element_serialise(TupleElement element, char* buffer) {
-    memcpy(buffer, &element.type, sizeof(element.type));
-    buffer += sizeof(element.type);
+    buffer = serialise_u32(buffer, element.type);
 
     if (element.type & tuple_element_type_template_bit) {
 	return buffer;
@@ -202,8 +205,7 @@ static char* tuple_element_serialise(TupleElement element, char* buffer) {
 		/* Zero na końcu też serializujemy. */
 		uint32_t string_length = strlen(element.data.data_string) + 1;
 
-		memcpy(buffer, &string_length, sizeof(string_length));
-		buffer += sizeof(string_length);
+                buffer = serialise_u32(buffer, string_length);
 
 		memcpy(buffer, element.data.data_string, string_length);
 		return buffer + string_length;
@@ -217,8 +219,8 @@ static char* tuple_element_serialise(TupleElement element, char* buffer) {
 
 
 static char const* tuple_element_deserialise(TupleElement* element, char const* buffer) {
-    memcpy(&element->type, buffer, sizeof(element->type));
-    buffer += sizeof(element->type);
+    buffer = deserialise_u32(buffer, &element->type);
+    printf("DEBUG element type: %d\n", (uint32_t)element->type);
 
     if (element->type & tuple_element_type_template_bit) {
 	return buffer;
@@ -234,9 +236,7 @@ static char const* tuple_element_deserialise(TupleElement* element, char const* 
 
 	    case tuple_string: {
 		uint32_t string_length;
-
-		memcpy(&string_length, buffer, sizeof(string_length));
-		buffer += sizeof(string_length);
+                buffer = deserialise_u32(buffer, &string_length);
 
 		element->data.data_string = (char*)malloc(string_length);
 		memcpy(element->data.data_string, buffer, string_length);
@@ -252,8 +252,7 @@ static char const* tuple_element_deserialise(TupleElement* element, char const* 
 
 
 char* tuple_serialise(Tuple const* tuple, char* buffer) {
-    memcpy(buffer, &tuple->element_count, sizeof(tuple->element_count));
-    buffer += sizeof(tuple->element_count);
+    buffer = serialise_u32(buffer, tuple->element_count);
 
     for (size_t idx = 0; idx < tuple->element_count; ++idx) {
 	buffer = tuple_element_serialise(tuple->elements[idx], buffer);
@@ -264,8 +263,7 @@ char* tuple_serialise(Tuple const* tuple, char* buffer) {
 
 
 char const* tuple_deserialise(Tuple* tuple, char const* buffer) {
-    memcpy(&tuple->element_count, buffer, sizeof(tuple->element_count));
-    buffer += sizeof(tuple->element_count);
+    buffer = deserialise_u32(buffer, &tuple->element_count);
 
     tuple->elements = (TupleElement*)malloc(tuple->element_count * sizeof(TupleElement));
 
@@ -277,10 +275,10 @@ char const* tuple_deserialise(Tuple* tuple, char const* buffer) {
 }
 
 size_t tuple_serialised_length(Tuple const* tuple) {
-    size_t buffer_size = sizeof(tuple->element_count);
+    size_t buffer_size = sizeof((uint32_t)tuple->element_count);
 
     for (size_t idx = 0; idx < tuple->element_count; ++idx) {
-	buffer_size += sizeof(tuple->elements[idx].type);
+	buffer_size += sizeof((uint32_t)tuple->elements[idx].type);
 
 	if (!(tuple->elements[idx].type & tuple_element_type_template_bit)) {
 	    switch (tuple->elements[idx].type) {
