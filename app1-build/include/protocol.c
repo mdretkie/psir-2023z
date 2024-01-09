@@ -1,18 +1,25 @@
 #include "protocol.h"
 #include <stdio.h>
 #include <string.h>
+#include "arduino.h"
+#ifndef PSIR_ARDUINO
 #include <stdatomic.h>
-#include "thread_local.h"
+#endif
 
 
 uint32_t message_next_id() {
+    #ifdef PSIR_ARDUINO
+    static uint32_t id = 0;
+    return id++;
+    #else
     static atomic_uint_least32_t id = 0;
     return atomic_fetch_add_explicit(&id, 1, memory_order_relaxed);
+    #endif
 }
 
 
 char* message_serialise_and_free(Message message) {
-    char* buffer_start = malloc(message_serialised_length(&message));
+    char* buffer_start = (char*)malloc(message_serialised_length(&message));
     char* buffer = buffer_start;
 
     memcpy(buffer, &message.id, sizeof(message.id));
