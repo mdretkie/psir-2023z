@@ -3,6 +3,12 @@
 #include <string.h>
 #include "network.h"
 
+#ifdef PSIR_ARDUINO
+    byte mac[]={0x00, 0xAA, 0xBB, 0xCC, 0xDE, 0x01};
+    ZsutEthernetUDP udp;            
+
+#endif
+
 
 InboundBuffer inbound_buffer_new(SOCKADDR sender_address) {
     InboundBuffer inbound_buffer = {
@@ -66,6 +72,12 @@ Network network_new(int so) {
         .inbound_buffers = NULL,
         .inbound_buffer_count = 0,
     };
+
+    #ifdef PSIR_ARDUINO
+    ZsutEthernet.begin(mac);
+    udp.begin(12346); /* port */
+    #endif
+
 
     return network;
 }
@@ -142,7 +154,41 @@ static void network_receive_ack_for_outbound_message(Network* network, OutboundM
 
 #ifdef PSIR_ARDUINO
 
-InboundMessage network_receive_message_blocking(Network* network) { }
+InboundMessage network_receive_message_blocking(Network* network) { 
+    char buffer[64];
+
+    for(;;) {
+        int ready_bytes = udp.parsePacket();
+        
+        if (!ready_bytes) {
+            continue;
+        }
+
+        int received_bytes = udp.read(buffer, sizeof(buffer));
+
+        if (received_bytes <= 0) {
+            udp.flush();
+            continue;
+        }
+
+        ArduinoNetworkAddress sender_address = {
+            .address = udp.remoteIP(),
+            .port = udp.remotePort(),
+        };
+
+        network_push_inbound_data(network, buffer, received_bytes, sender_address);
+
+        InboundMessage inbound_message;
+
+        if (network_take_any_complete_message(network, &inbound_message)) {
+            if (inbound_message.message.type != message_ack) {
+                network_ack_inbound_message(network, &inbound_message);
+            }
+
+            return inbound_message;
+        }
+    }
+}
 
 #else
 
@@ -180,7 +226,9 @@ InboundMessage network_receive_message_blocking(Network* network) {
 #ifdef PSIR_ARDUINO
 
 static void sendto_all(int so, char* buffer, size_t buffer_size, SOCKADDR_IN receiver_address) { 
-
+    udp.beginPacket(receiver_address.address, receiver_address.port);
+    udp.write(buffer, buffer_size);
+    udp.endPacket();
 }
 
 #else

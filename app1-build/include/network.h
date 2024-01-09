@@ -5,15 +5,27 @@
 #include "arduino.h"
 
 #ifdef PSIR_ARDUINO
-	#define SOCKADDR char
-	#define SOCKADDR_IN char
+    #include <ZsutDhcp.h>
+    #include <ZsutEthernet.h>
+    #include <ZsutEthernetUdp.h>
+    #include <ZsutFeatures.h>
+    typedef struct ArduinoNetworkAddress {
+        ZsutIPAddress address;
+        unsigned port;
+    } ArduinoNetworkAddress;
+
+    #define SOCKADDR ArduinoNetworkAddress
+    #define SOCKADDR_IN ArduinoNetworkAddress
+
 #else
-	#include <netinet/in.h>
-	#include <arpa/inet.h>
-	#include <sys/socket.h>
-	#define SOCKADDR struct sockaddr
-	#define SOCKADDR_IN struct sockaddr_in
+    #include <netinet/in.h>
+    #include <arpa/inet.h>
+    #include <sys/socket.h>
+    #define SOCKADDR struct sockaddr
+    #define SOCKADDR_IN struct sockaddr_in
+
 #endif
+
 
 
 typedef struct InboundMessage {
