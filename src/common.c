@@ -31,6 +31,13 @@ char const* deserialise_u32(char const* buffer, void* value) {
     return buffer + sizeof(uint32_t);
 }
 
+// https://stackoverflow.com/a/12792056/16766872
+bool is_le() {
+    volatile uint32_t i=0x01234567;
+    // return 0 for big endian, 1 for little endian.
+    return (*((uint8_t*)(&i))) == 0x67;
+}
+
 #ifndef ARDUINO
 
 void sleep_ms(unsigned ms) {

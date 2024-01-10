@@ -157,12 +157,37 @@ static void network_receive_ack_for_outbound_message(Network* network, OutboundM
 #ifdef PSIR_ARDUINO
 
 InboundMessage network_receive_message_blocking(Network* network) { 
-    char buffer[64];
+    uint32_t data_length;
+    while (udp.parsePacket() < (int)sizeof(uint32_t));
+    udp.read((char*)&data_length, sizeof(uint32_t));
+
+    char* data = (char*)malloc(data_length);
+    while (udp.parsePacket() < (int)data_length);
+    udp.read(data, data_length);
+
+    ArduinoNetworkAddress sender_address = {
+        .address = udp.remoteIP(),
+        .port = udp.remotePort(),
+    };
+
+    InboundMessage inbound_message = {
+        .message = message_deserialise_no_free(data),
+        .sender_address = sender_address,
+    };
+
+    if (inbound_message.message.type != message_ack) {
+        network_ack_inbound_message(network, &inbound_message);
+    }
+
+    free(data);
+
+    return inbound_message;
+
+    /*
+
 
     for(;;) {
-        int ready_bytes = udp.parsePacket();
-        
-        if (!ready_bytes) {
+        if (!udp.parsePacket()) {
             continue;
         }
 
@@ -178,6 +203,8 @@ InboundMessage network_receive_message_blocking(Network* network) {
             .port = udp.remotePort(),
         };
 
+        memset(&sender_address, 0, sizeof(sender_address));
+
         network_push_inbound_data(network, buffer, received_bytes, sender_address);
 
         InboundMessage inbound_message;
@@ -190,6 +217,7 @@ InboundMessage network_receive_message_blocking(Network* network) {
             return inbound_message;
         }
     }
+    */
 }
 
 #else

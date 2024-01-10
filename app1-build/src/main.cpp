@@ -11,7 +11,12 @@
 
 
 void setup() {
-    ZsutPinMode(LED, OUTPUT);
+    /*
+    Network network = network_new(0);
+
+    InboundMessage im = network_receive_message_blocking(&network);
+    Serial.println(message_to_string_short(&im.message));
+    */
 
     Tuple tuple = {
 	.element_count = 3,
@@ -72,6 +77,8 @@ void setup() {
     network_free(network);
 
     Serial.println("DONE");
+
+    ZsutPinMode(LED, OUTPUT);
 }
 
 void loop() {
