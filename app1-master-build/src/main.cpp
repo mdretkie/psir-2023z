@@ -102,12 +102,16 @@ void setup() {
                 switch (inbound_message.message.data.tuple_space_get_reply.result.status) {
                     case tuple_space_success: {
                         int32_t number = tuple_get_int(&inbound_message.message.data.tuple_space_get_reply.result.tuple, 1);
+
                         result_collected[number] = true;
                         collected_result_count += 1;
-                        Serial.print(number);
-                        Serial.println(F(" is prime"));
+
+                        Serial.print(F("Reply: "));
+                        Serial.println(tuple_to_string(&inbound_message.message.data.tuple_space_get_reply.result.tuple);
+
                         break;
                     }
+
                     case tuple_space_failure: {
                         send_query_message(&network, server_address, "not prime");
 
@@ -116,12 +120,16 @@ void setup() {
                         switch (inbound_message.message.data.tuple_space_get_reply.result.status) {
                             case tuple_space_success: {
                                 int32_t number = tuple_get_int(&inbound_message.message.data.tuple_space_get_reply.result.tuple, 1);
+
                                 result_collected[number] = true;
                                 collected_result_count += 1;
-                                Serial.print(number);
-                                Serial.println(F(" is not prime"));
+
+                                Serial.print(F("Reply: "));
+                                Serial.println(tuple_to_string(&inbound_message.message.data.tuple_space_get_reply.result.tuple);
+
                                 break;
                             }
+
                             case tuple_space_failure: {
                                 break;
                             }
