@@ -1,10 +1,2 @@
-#Opening file to store genrated events (2024-01-10 14:21:48)
-: 31693, D2, 1
-: 1010432, D2, 0
-: 1990541, D2, 1
-: 2970649, D2, 0
-: 3950820, D2, 1
-: 4930923, D2, 0
-: 5911099, D2, 1
-: 6891202, D2, 0
-#Closing file with generated events (7791068)
+#Opening file to store genrated events (2024-01-10 15:05:41)
+#Closing file with generated events (22212800)

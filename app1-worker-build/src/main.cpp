@@ -59,7 +59,7 @@ int32_t receive_task(Network* network, ArduinoNetworkAddress server_address) {
 
     int32_t number = tuple_get_int(&inbound_message.message.data.tuple_space_get_reply.result.tuple, 1);
 
-    Serial.print(F("Received task: "));
+    Serial.print(F("Accepting task: "));
     Serial.println(tuple_to_string(&inbound_message.message.data.tuple_space_get_reply.result.tuple));
 
     return number;
@@ -110,7 +110,6 @@ void setup() {
 
 
     for(;;) {
-        Serial.println("Waiting");
         int32_t number = receive_task(&network, server_address);
         send_reply(&network, server_address, number);
     }
