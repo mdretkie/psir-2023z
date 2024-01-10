@@ -64,17 +64,17 @@ Message message_deserialise_no_free(char* buffer_) {
     Message message;
 
     buffer = deserialise_u32(buffer, &message.id);
-    Serial.print("Message id ");
-    Serial.println(message.id);
+    //Serial.print("Message id ");
+    //Serial.println(message.id);
     buffer = deserialise_u32(buffer, &message.type);
-    Serial.print("Message type ");
-    Serial.println(message.type);
+    //Serial.print("Message type ");
+    //Serial.println(message.type);
 
     switch (message.type) {
 	case message_ack: 
             buffer = deserialise_u32(buffer, &message.data.ack.message_id);
-            Serial.print("Message ack ");
-            Serial.println(message.data.ack.message_id);
+            //Serial.print("Message ack ");
+            //Serial.println(message.data.ack.message_id);
 	    break;
 
 	case message_tuple_space_insert_request:

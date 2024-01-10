@@ -50,8 +50,6 @@ void server_free(Server server) {
 }
 
 void server_run(Server* server) {
-    printf("DEBUG %d\n", is_le());
-
     for(;;) {
         InboundMessage inbound_message = network_receive_message_blocking(&server->network);
         printf("%s Received message from %s: %s\n", formatted_timestamp(), address_to_text(*(struct sockaddr_in*)(&inbound_message.sender_address)), message_to_string_short(&inbound_message.message));
