@@ -16,6 +16,7 @@
 
     #define SOCKADDR ArduinoNetworkAddress
     #define SOCKADDR_IN ArduinoNetworkAddress
+    #define SOCKET ZsutEthernetUDP
 
 #else
     #include <netinet/in.h>
@@ -23,6 +24,7 @@
     #include <sys/socket.h>
     #define SOCKADDR struct sockaddr
     #define SOCKADDR_IN struct sockaddr_in
+    #define SOCKET int
 
 #endif
 
@@ -55,12 +57,12 @@ void inbound_buffer_push_data(InboundBuffer* inbound_buffer, char const* data, s
 
 
 typedef struct Network {
-    int so;
+    SOCKET so;
     InboundBuffer* inbound_buffers;
     size_t inbound_buffer_count;
 } Network;
 
-Network network_new(int so);
+Network network_new(SOCKET so);
 void network_free(Network network);
 
 void network_append_inbound_buffer(Network* network, SOCKADDR sender_address);

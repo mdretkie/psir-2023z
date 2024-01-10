@@ -26,14 +26,17 @@ bool is_prime(int num)
 
 int32_t receive_task(Network* network, ArduinoNetworkAddress server_address) {
     Tuple tuple = {
-        .element_count = 2,
-        .elements = (TupleElement*)malloc(2 * sizeof(TupleElement))
+        .element_count = 3,
+        .elements = (TupleElement*)malloc(3 * sizeof(TupleElement))
     };
 
-    tuple.elements[0].type = tuple_string;
-    tuple.elements[0].data.data_string = alloc_string("is prime");
+    tuple.elements[0].type = tuple_string,
+    tuple.elements[0].data.data_string = alloc_string("app1");
 
-    tuple.elements[1].type = tuple_int_template;
+    tuple.elements[1].type = tuple_string;
+    tuple.elements[1].data.data_string = alloc_string("is prime");
+
+    tuple.elements[2].type = tuple_int_template;
 
     
     Message message = {
@@ -57,7 +60,7 @@ int32_t receive_task(Network* network, ArduinoNetworkAddress server_address) {
 
     InboundMessage inbound_message = network_receive_message_blocking(network);
 
-    int32_t number = tuple_get_int(&inbound_message.message.data.tuple_space_get_reply.result.tuple, 1);
+    int32_t number = tuple_get_int(&inbound_message.message.data.tuple_space_get_reply.result.tuple, 2);
 
     Serial.print(F("Accepting task: "));
     Serial.println(tuple_to_string(&inbound_message.message.data.tuple_space_get_reply.result.tuple));
@@ -68,15 +71,18 @@ int32_t receive_task(Network* network, ArduinoNetworkAddress server_address) {
 
 void send_reply(Network* network, ArduinoNetworkAddress server_address, int32_t number) {
     Tuple tuple = {
-        .element_count = 2,
-        .elements = (TupleElement*)malloc(2 * sizeof(TupleElement))
+        .element_count = 3,
+        .elements = (TupleElement*)malloc(3 * sizeof(TupleElement))
     };
 
-    tuple.elements[0].type = tuple_string;
-    tuple.elements[0].data.data_string = alloc_string(is_prime(number) ? "prime" : "not prime");
+    tuple.elements[0].type = tuple_string,
+    tuple.elements[0].data.data_string = alloc_string("app1");
 
-    tuple.elements[1].type = tuple_int;
-    tuple.elements[1].data.data_int = number;
+    tuple.elements[1].type = tuple_string;
+    tuple.elements[1].data.data_string = alloc_string(is_prime(number) ? "prime" : "not prime");
+
+    tuple.elements[2].type = tuple_int;
+    tuple.elements[2].data.data_int = number;
 
     Serial.print(F("Sending reply: "));
     Serial.println(tuple_to_string(&tuple));
@@ -101,7 +107,12 @@ void send_reply(Network* network, ArduinoNetworkAddress server_address, int32_t 
 
 
 void setup() {
-    Network network = network_new(0);
+    byte mac[]={0x00, 0xAA, 0xBB, 0xCC, 0xDE, 0x01};
+    ZsutEthernet.begin(mac);
+    ZsutEthernetUDP udp;
+    udp.begin(0);
+
+    Network network = network_new(udp);
 
     ArduinoNetworkAddress server_address = {
         .address = ZsutIPAddress(127, 0, 0, 1),

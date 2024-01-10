@@ -4,12 +4,6 @@
 #include "network.h"
 #include "common.h"
 
-#ifdef PSIR_ARDUINO
-    byte mac[]={0x00, 0xAA, 0xBB, 0xCC, 0xDE, 0x01};
-    ZsutEthernetUDP udp;            
-
-#endif
-
 
 InboundBuffer inbound_buffer_new(SOCKADDR sender_address) {
     InboundBuffer inbound_buffer = {
@@ -67,18 +61,12 @@ void inbound_buffer_push_data(InboundBuffer* inbound_buffer, char const* data, s
 }
 
 
-Network network_new(int so) {
+Network network_new(SOCKET so) {
     Network network = {
         .so = so,
         .inbound_buffers = NULL,
         .inbound_buffer_count = 0,
     };
-
-    #ifdef PSIR_ARDUINO
-    ZsutEthernet.begin(mac);
-    udp.begin(12346); /* port */
-    #endif
-
 
     return network;
 }
@@ -159,16 +147,16 @@ static void network_receive_ack_for_outbound_message(Network* network, OutboundM
 
 InboundMessage network_receive_message_blocking(Network* network) { 
     uint32_t data_length;
-    while (udp.parsePacket() < (int)sizeof(uint32_t));
-    udp.read((char*)&data_length, sizeof(uint32_t));
+    while (network->so.parsePacket() < (int)sizeof(uint32_t));
+    network->so.read((char*)&data_length, sizeof(uint32_t));
 
     char* data = (char*)malloc(data_length);
-    while (udp.parsePacket() < (int)data_length);
-    udp.read(data, data_length);
+    while (network->so.parsePacket() < (int)data_length);
+    network->so.read(data, data_length);
 
     ArduinoNetworkAddress sender_address = {
-        .address = udp.remoteIP(),
-        .port = udp.remotePort(),
+        .address = network->so.remoteIP(),
+        .port = network->so.remotePort(),
     };
 
     InboundMessage inbound_message = {
@@ -184,41 +172,6 @@ InboundMessage network_receive_message_blocking(Network* network) {
 
     return inbound_message;
 
-    /*
-
-
-    for(;;) {
-        if (!udp.parsePacket()) {
-            continue;
-        }
-
-        int received_bytes = udp.read(buffer, sizeof(buffer));
-
-        if (received_bytes <= 0) {
-            udp.flush();
-            continue;
-        }
-
-        ArduinoNetworkAddress sender_address = {
-            .address = udp.remoteIP(),
-            .port = udp.remotePort(),
-        };
-
-        memset(&sender_address, 0, sizeof(sender_address));
-
-        network_push_inbound_data(network, buffer, received_bytes, sender_address);
-
-        InboundMessage inbound_message;
-
-        if (network_take_any_complete_message(network, &inbound_message)) {
-            if (inbound_message.message.type != message_ack) {
-                network_ack_inbound_message(network, &inbound_message);
-            }
-
-            return inbound_message;
-        }
-    }
-    */
 }
 
 #else
@@ -258,15 +211,15 @@ InboundMessage network_receive_message_blocking(Network* network) {
 
 #ifdef PSIR_ARDUINO
 
-static void sendto_all(int so, char* buffer, size_t buffer_size, SOCKADDR_IN receiver_address) { 
-    udp.beginPacket(receiver_address.address, receiver_address.port);
-    udp.write(buffer, buffer_size);
-    udp.endPacket();
+static void sendto_all(SOCKET so, char* buffer, size_t buffer_size, SOCKADDR_IN receiver_address) { 
+    so.beginPacket(receiver_address.address, receiver_address.port);
+    so.write(buffer, buffer_size);
+    so.endPacket();
 }
 
 #else
 
-static void sendto_all(int so, char* buffer, size_t buffer_size, SOCKADDR_IN receiver_address) {
+static void sendto_all(SOCKET so, char* buffer, size_t buffer_size, SOCKADDR_IN receiver_address) {
     size_t sent_bytes = 0;
 
     while(sent_bytes < buffer_size) {
@@ -284,6 +237,10 @@ static void sendto_all(int so, char* buffer, size_t buffer_size, SOCKADDR_IN rec
 
 
 void network_send_and_free_message_no_ack(Network* network, OutboundMessage message) {
+    #ifndef PSIR_ARDUINO
+    printf("%s Sending  message to   %s: %s\n", formatted_timestamp(), address_to_text(*(struct sockaddr_in*)(&message.receiver_address)), message_to_string_short(&message.message));
+    #endif
+
     uint32_t bytes_length = message_serialised_length(&message.message);
     char* bytes = message_serialise_and_free(message.message);
     sendto_all(network->so, (char*)&bytes_length, sizeof(bytes_length), *(SOCKADDR_IN*)(&message.receiver_address));
@@ -293,8 +250,6 @@ void network_send_and_free_message_no_ack(Network* network, OutboundMessage mess
 
 
 void network_send_and_free_message(Network* network, OutboundMessage message) {
-    printf("%s Sending  message to   %s: %s\n", formatted_timestamp(), address_to_text(*(struct sockaddr_in*)(&message.receiver_address)), message_to_string_short(&message.message));
-
     network_send_and_free_message_no_ack(network, message);
 
     if (message.message.type != message_ack) {

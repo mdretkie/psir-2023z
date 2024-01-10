@@ -60,6 +60,7 @@ typedef struct Network {
     size_t inbound_buffer_count;
 } Network;
 
+/* Dla Arduino zamiast socketu to jest numer portu. */
 Network network_new(int so);
 void network_free(Network network);
 
