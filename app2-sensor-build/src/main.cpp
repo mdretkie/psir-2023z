@@ -46,7 +46,12 @@ void send_state_change(Network* network, ArduinoNetworkAddress server_address, u
 }
 
 void setup() {
-    Network network = network_new(0);
+    byte mac[]={0x00, 0xAA, 0xBB, 0xCC, 0xDE, 0x01};
+    ZsutEthernet.begin(mac);
+    ZsutEthernetUDP udp;
+    udp.begin(0);
+
+    Network network = network_new(udp);
 
     ArduinoNetworkAddress server_address = {
         .address = ZsutIPAddress(127, 0, 0, 1),
