@@ -1,0 +1,23 @@
++ sensor,status,D13
+
+: 10000000, sensor, 0
+: 20000000, sensor, 1
+: 30000000, sensor, 0
+: 40000000, sensor, 1
+: 50000000, sensor, 0
+: 60000000, sensor, 1
+: 70000000, sensor, 0
+: 80000000, sensor, 1
+: 90000000, sensor, 0
+: 100000000, sensor, 1
+: 110000000, sensor, 0
+: 120000000, sensor, 1
+: 130000000, sensor, 0
+: 140000000, sensor, 1
+: 150000000, sensor, 0
+: 160000000, sensor, 1
+: 170000000, sensor, 0
+: 180000000, sensor, 1
+: 190000000, sensor, 0
+: 200000000, sensor, 1
+: 210000000, sensor, 0

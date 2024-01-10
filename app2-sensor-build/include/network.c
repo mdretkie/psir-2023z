@@ -2,7 +2,6 @@
 #include <stdlib.h>
 #include <string.h>
 #include "network.h"
-#include "common.h"
 
 #ifdef PSIR_ARDUINO
     byte mac[]={0x00, 0xAA, 0xBB, 0xCC, 0xDE, 0x01};
@@ -241,8 +240,6 @@ InboundMessage network_receive_message_blocking(Network* network) {
         InboundMessage inbound_message;
 
         if (network_take_any_complete_message(network, &inbound_message)) {
-            printf("%s Received message from %s: %s\n", formatted_timestamp(), address_to_text(*(struct sockaddr_in*)(&inbound_message.sender_address)), message_to_string_short(&inbound_message.message));
-
             if (inbound_message.message.type != message_ack) {
                 network_ack_inbound_message(network, &inbound_message);
             }
@@ -293,8 +290,6 @@ void network_send_and_free_message_no_ack(Network* network, OutboundMessage mess
 
 
 void network_send_and_free_message(Network* network, OutboundMessage message) {
-    printf("%s Sending  message to   %s: %s\n", formatted_timestamp(), address_to_text(*(struct sockaddr_in*)(&message.receiver_address)), message_to_string_short(&message.message));
-
     network_send_and_free_message_no_ack(network, message);
 
     if (message.message.type != message_ack) {
