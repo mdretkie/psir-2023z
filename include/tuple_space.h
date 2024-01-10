@@ -47,6 +47,8 @@ void tuple_space_free(TupleSpace tuple_space);
 void tuple_space_insert(TupleSpace* tuple_space, Tuple tuple);
 TupleSpaceOperationResult tuple_space_get(TupleSpace* tuple_space, Tuple const* tuple_template, TupleSpaceOperationBlockingMode blocking_mode, TupleSpaceOperationRemovePolicy remove_policy);
 
+char const* tuple_space_to_string(TupleSpace const* tuple_space);
+
 #endif
 
 #endif

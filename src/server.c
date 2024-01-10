@@ -55,7 +55,6 @@ void server_run(Server* server) {
 
         server_handle_inbound_message_nonblocking(server, inbound_message);
         server_process_blocked_get_requests(server);
-
     }
 }
 
@@ -75,6 +74,8 @@ void server_handle_inbound_message_nonblocking(Server* server, InboundMessage in
 
         case message_tuple_space_insert_request:
             tuple_space_insert(&server->tuple_space, inbound_message.message.data.tuple_space_insert_request.tuple);
+
+            printf("%s Tuple space: %s\n", formatted_timestamp(), tuple_space_to_string(&server->tuple_space));
             break;
 
         case message_tuple_space_get_request:
@@ -87,6 +88,8 @@ void server_handle_inbound_message_nonblocking(Server* server, InboundMessage in
                 inbound_message.message.data.tuple_space_get_request.blocking_mode, 
                 inbound_message.message.data.tuple_space_get_request.remove_policy
             );
+
+            printf("%s Tuple space: %s\n", formatted_timestamp(), tuple_space_to_string(&server->tuple_space));
 
             Message message = {
                 .id = message_next_id(),
@@ -143,6 +146,8 @@ void server_process_blocked_get_requests(Server* server) {
             };
 
             network_send_and_free_message_no_ack(&server->network, outbound_message);
+
+            printf("%s Tuple space: %s\n", formatted_timestamp(), tuple_space_to_string(&server->tuple_space));
 
             server->blocked_get_requests[i] = server->blocked_get_requests[server->blocked_get_request_count - 1];
             server->blocked_get_requests = realloc(server->blocked_get_requests, (server->blocked_get_request_count - 1) * sizeof(InboundMessage));

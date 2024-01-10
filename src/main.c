@@ -14,9 +14,7 @@ int main(int argc, char** argv) {
     }
 
     if (!strcmp(argv[1], "server")) {
-        printf("%s Server starting\n", formatted_timestamp());
         Server server = server_new();
-        printf("%s Initialisation done. Listening for messages\n", formatted_timestamp());
         server_run(&server);
         server_free(server);
         printf("%s Server finished\n", formatted_timestamp());

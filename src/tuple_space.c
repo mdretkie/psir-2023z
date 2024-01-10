@@ -102,3 +102,22 @@ TupleSpaceOperationResult tuple_space_get(TupleSpace* tuple_space, Tuple const* 
     return result;
 }
 
+
+char const* tuple_space_to_string(TupleSpace const* tuple_space) {
+    static thread_local char buffer[16384];
+
+    int offset = snprintf(buffer, sizeof(buffer), "[");
+
+    for (size_t i = 0; i < tuple_space->tuple_count; ++i) {
+        offset += snprintf(buffer + offset, sizeof(buffer) - offset, "%s", tuple_to_string(&tuple_space->tuples[i]));
+
+	if (i < tuple_space->tuple_count - 1) {
+            offset += snprintf(buffer + offset, sizeof(buffer) - offset, ", ");
+        }
+    }
+
+    snprintf(buffer + offset, sizeof(buffer) - offset, "]");
+
+    return buffer;
+}
+
