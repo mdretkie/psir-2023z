@@ -13,7 +13,7 @@
 // https://stackoverflow.com/a/5281794/16766872
 bool is_prime(int num)
 {
-    delay(random(0, 4000));
+    delay(random(0, 2000));
     if (num <= 1) return 0;
     if (num % 2 == 0 && num > 2) return 0;
     for(int i = 3; i < num / 2; i+= 2)
@@ -65,6 +65,8 @@ int32_t receive_task(Network* network, ArduinoNetworkAddress server_address) {
 
     Serial.print(F("Accepting task: "));
     Serial.println(tuple_to_string(&inbound_message.message.data.tuple_space_get_reply.result.tuple));
+
+    tuple_free(inbound_message.message.data.tuple_space_get_reply.result.tuple);
 
     return number;
 }

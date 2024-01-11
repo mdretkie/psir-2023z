@@ -7,7 +7,7 @@ ROOT_DIR="$(dirname ${BASH_SOURCE[0]})"
 mkdir -p "${ROOT_DIR}"/build/{server,app1-master,app1-worker,app2-sensor,app2-counter}
 
 echo "Building server"
-gcc -Wall -Wextra -Wpedantic -fsanitize=address,undefined -std=gnu17 -o "${ROOT_DIR}"/build/server/server -I"${ROOT_DIR}"/include $(find "${ROOT_DIR}"/src/ -type f ! -name 'main-app*')
+gcc -Wall -Wextra -Wpedantic -std=gnu17 -o "${ROOT_DIR}"/build/server/server -I"${ROOT_DIR}"/include $(find "${ROOT_DIR}"/src/ -type f ! -name 'main-app*')
 
 for APP in app1-master app1-worker app2-sensor app2-counter; do
     echo "Building ${APP}"

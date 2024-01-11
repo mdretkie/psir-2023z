@@ -49,6 +49,8 @@ unsigned receive_state_change(Network* network, ArduinoNetworkAddress server_add
 
     int32_t new_state = tuple_get_int(&inbound_message.message.data.tuple_space_get_reply.result.tuple, 2);
 
+    tuple_free(inbound_message.message.data.tuple_space_get_reply.result.tuple);
+
     return new_state;
 }
 

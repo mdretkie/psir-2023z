@@ -95,7 +95,7 @@ void setup() {
         .port = 12344,
     };
 
-    unsigned task_count = 8;
+    unsigned task_count = 32;
     for (unsigned i = 0; i < task_count; ++i) {
         create_task(&network, server_address, i);
     }
@@ -117,6 +117,8 @@ void setup() {
                 Serial.print(F("Reply: "));
                 Serial.println(tuple_to_string(&inbound_message.message.data.tuple_space_get_reply.result.tuple));
 
+                tuple_free(inbound_message.message.data.tuple_space_get_reply.result.tuple);
+
                 break;
             }
 
@@ -134,6 +136,8 @@ void setup() {
 
                         Serial.print(F("Reply: "));
                         Serial.println(tuple_to_string(&inbound_message.message.data.tuple_space_get_reply.result.tuple));
+
+                        tuple_free(inbound_message.message.data.tuple_space_get_reply.result.tuple);
 
                         break;
                     }
