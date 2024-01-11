@@ -5,7 +5,8 @@
 #include "tuple.c"
 #include "common.c"
 #include "protocol.c"
-#include "network.c"
+#include "network.h"
+// #include "network.c"
 
 #define LED     ZSUT_PIN_D2
 
