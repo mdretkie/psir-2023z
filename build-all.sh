@@ -30,5 +30,7 @@ for APP in app1-master app1-worker app2-sensor app2-counter; do
     (cd "${BUILD_DIR}"; platformio run > /dev/null)
 done
 
+cp "${ROOT_DIR}"/app2-sensor-infile.txt "${ROOT_DIR}"/build/app2-sensor/infile.txt
+
 echo "Done"
 

@@ -100,21 +100,36 @@ void setup() {
         create_task(&network, server_address, i);
     }
 
-    bool* result_collected = (bool*)malloc(task_count * sizeof(bool));
     unsigned collected_result_count = 0;
 
     while (collected_result_count != task_count) {
-        for (size_t i = 0; i < task_count; ++i) {
-            if (!result_collected[i]) {
-                send_query_message(&network, server_address, "prime");
+        send_query_message(&network, server_address, "prime");
+
+        InboundMessage inbound_message = network_receive_message_blocking(&network);
+
+        switch (inbound_message.message.data.tuple_space_get_reply.result.status) {
+            case tuple_space_success: {
+                int32_t number = tuple_get_int(&inbound_message.message.data.tuple_space_get_reply.result.tuple, 2);
+                (void)number;
+
+                collected_result_count += 1;
+
+                Serial.print(F("Reply: "));
+                Serial.println(tuple_to_string(&inbound_message.message.data.tuple_space_get_reply.result.tuple));
+
+                break;
+            }
+
+            case tuple_space_failure: {
+                send_query_message(&network, server_address, "not prime");
 
                 InboundMessage inbound_message = network_receive_message_blocking(&network);
 
                 switch (inbound_message.message.data.tuple_space_get_reply.result.status) {
                     case tuple_space_success: {
                         int32_t number = tuple_get_int(&inbound_message.message.data.tuple_space_get_reply.result.tuple, 2);
+                        (void)number;
 
-                        result_collected[number] = true;
                         collected_result_count += 1;
 
                         Serial.print(F("Reply: "));
@@ -124,36 +139,17 @@ void setup() {
                     }
 
                     case tuple_space_failure: {
-                        send_query_message(&network, server_address, "not prime");
-
-                        InboundMessage inbound_message = network_receive_message_blocking(&network);
-
-                        switch (inbound_message.message.data.tuple_space_get_reply.result.status) {
-                            case tuple_space_success: {
-                                int32_t number = tuple_get_int(&inbound_message.message.data.tuple_space_get_reply.result.tuple, 2);
-
-                                result_collected[number] = true;
-                                collected_result_count += 1;
-
-                                Serial.print(F("Reply: "));
-                                Serial.println(tuple_to_string(&inbound_message.message.data.tuple_space_get_reply.result.tuple));
-
-                                break;
-                            }
-
-                            case tuple_space_failure: {
-                                break;
-                            }
-                        }
-
+                        delay(1000);
                         break;
                     }
                 }
+
+                break;
             }
         }
     }
 
-    free(result_collected);
+    Serial.println("Done");
 
     network_free(network);
 }

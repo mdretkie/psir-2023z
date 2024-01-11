@@ -1,0 +1,3 @@
+#Opening file to store genrated events (2024-01-11 21:20:07)
+: 0, D13, 0
+#Closing file with generated events (2514441)
