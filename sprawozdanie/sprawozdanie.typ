@@ -4,7 +4,7 @@
 
 #align(center + horizon)[
     #text(size: 36pt)[
-	PSIR — Projekt
+	PSIR -- Projekt
     ]
     #v(1cm)
     #text(size: 24pt)[
@@ -31,7 +31,7 @@
 #set page(numbering: "1")
 
 
-= Protokołó aplikacyjny
+= Protokół aplikacyjny
 
 Implementacja protokołu zawarta jest w plikach `protocol.h` i `protocol.h`.
 
@@ -197,6 +197,39 @@ typedef enum TupleSpaceOperationStatus {
 char const* tuple_space_to_string(TupleSpace const* tuple_space);
   ```
   Wynikowy string jest poprawny tylko do momentu kolejnego wywołania tej metody z tego samego wątku. Aby zachować go na dłużej należy wykonać kopię.
+
+
+Odpowiedniość pomiędzy API z prezentacji do projektu a zaimplementowanym przez nas jest następująca (dla przykładowych parametrów):
+
+- Nieblokujące wstawianie:
+  ```c
+  out(tuple);
+  tuple_space_insert(&tuple_space, tuple);
+  ```
+
+- Nieblokujący, nieusuwający odczyt:
+  ```c
+  rdp(template);
+  tuple_space_get(&tuple_space, &template, tuple_space_nonblocking, tuple_space_keep);
+  ```
+
+- Nieblokujący, usuwający odczyt:
+  ```c
+  inp(template);
+  tuple_space_get(&tuple_space, &template, tuple_space_nonblocking, tuple_space_remove);
+  ```
+
+- Blokujący, nieusuwający odczyt:
+  ```c
+  rd(template);
+  tuple_space_get(&tuple_space, &template, tuple_space_blocking, tuple_space_keep);
+  ```
+
+- Blokujący, usuwający odczyt:
+  ```c
+  in(template);
+  tuple_space_get(&tuple_space, &template, tuple_space_blocking, tuple_space_remove);
+  ```
 
 
 Struktura `TupleSpace` i jej wszystkie metody są thread-safe (można je wykonywać współbieżnie), ponieważ według pierwotnego pomysłu serwer miał być zaimplementowany wielowątkowo, co jednak nie okazało się konieczne.
