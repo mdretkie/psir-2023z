@@ -31,7 +31,7 @@
 #set page(numbering: "1")
 
 
-= Specyfikacja protokołu aplikacyjnego
+= Protokołó aplikacyjny
 
 Implementacja protokołu zawarta jest w plikach `protocol.h` i `protocol.h`.
 
@@ -121,7 +121,7 @@ Znaczenie pól:
 Podczas transmisji, każda wiadomość poprzedzona jest swoją długością w bajtach, rzutowaną na typ `uint32_t`.
 
 
-= Tuple Space
+= Przestrzeń krotek
 
 Tuple Space definiuje następujące API, zaimplementowane w plikach `tuple_space.h` i `tuple_space.c`:
 
@@ -202,12 +202,34 @@ char const* tuple_space_to_string(TupleSpace const* tuple_space);
 Struktura `TupleSpace` i jej wszystkie metody są thread-safe (można je wykonywać współbieżnie), ponieważ według pierwotnego pomysłu serwer miał być zaimplementowany wielowątkowo, co jednak nie okazało się konieczne.
 
 
+Aplikacje klienckie komunikują się z przestrzenią krotek poprzez serwer (opisany w następnym rozdziale) przy pomocy protokołu aplikacyjnego (opisanego w poprzednim rozdziale).
+
+
 = Serwer
 
+Serwer oczekuje na połączenie klientów nasłuchując na określonym z góry porcie UDP na wszystkich interfejsach. W głównej pętli programu oczekujemy na wiadomości od klientów i przetwarzamy je zależnie od ich typu, modyfikując przestrzeń krotek i/lub odsyłając odpowiedzi do klientów.
 
+```c
+for(;;) {
+    InboundMessage inbound_message = network_receive_message_blocking(
+        &server->network
+    );
+    server_handle_inbound_message_nonblocking(server, inbound_message);
+    server_process_blocked_get_requests(server);
+}
+```
+
+W osobny sposób traktujemy blokujące żądania odczytu krotki wysłane przez klientów. Przy odebraniu takiego żadania sprawdzamy, czy może ono być spełnione od razu, i jeśli tak, to odsyłamy odpowiedź. W przeciwnym razie zapisujemy żądanie do tablicy `blocked_get_requests` struktury `Server` i nie wysyłamy żadnej odpowiedzi do klienta, tylko przechodzimy do obsługi następnych przychodzących wiadomości. 
+
+Po przetworzeniu każdej odebranej wiadomości od dowolnego z klientów wracamy do tablicy `blocked_get_requests` i sprawdzamy które z zapytań w niej zawartych mogą być spełnione od razu i tylko na nie odsyłamy odpowiedzi. Korzystamy tu z obserwacji, że jedynym zdarzeniem, które mogłoby odblokować oczekujące żądanie jest przyjście wiadomości typu `message_tuple_space_insert_request` od któregoś z klientów. Ta strategia pozwala na to, aby serwer był współbieżny i jednocześnie jednowątkowy, co upraszcza w pewnym stopniu implementację.
+
+Jedyną niestandardową strukturą danych wykorzystaną w implementacji serwera jest wektor, czyli dynamicznie alokowana tablica zmiennej wielkości, stosowana między innymi do przechowywania blokujących wiadomości typu `message_tuple_space_get_request`, buforów na dane przychodzące z sieci, itp. Ponieważ często wykorzystywaną operacją jest usuwanie elementów z dowolnej pozycji wektora, jego elementy nie gwarantują stałej kolejności, dzięki czemu usuwanie elementu implementowane jest jako nadpisanie go ostatnim elementem i zmniejszenie długości wektora o 1, co daje stałą złożoność obliczeniową.
 
 
 = Aplikacja 1.
+
+
+
 
 = Aplikacja 2.
 
