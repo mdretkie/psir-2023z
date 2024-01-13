@@ -123,8 +123,88 @@ Podczas transmisji, każda wiadomość poprzedzona jest swoją długością w ba
 
 = Tuple Space
 
+Tuple Space definiuje następujące API, zaimplementowane w plikach `tuple_space.h` i `tuple_space.c`:
+
+- Struktura utrzymująca stan przestrzeni krotek:
+  ```c
+typedef struct TupleSpace {
+    size_t tuple_count;
+    Tuple* tuples;
+} TupleSpace;
+  ```
+
+- Konstruktor pustej przestrzeni krotek:
+  ```c
+TupleSpace tuple_space_new();
+  ```
+
+- Destruktor przestrzeni krotek, zwalniający zasoby wszystkich przechowywanych.
+  ```c
+void tuple_space_free(TupleSpace tuple_space);
+  ```
+
+- Metoda wstawiająca krotkę `tuple` do przestrzeni krotek. Nieblokująca. Nie ma wymagania, aby wstawiane krotki były różne.
+  ```c
+void tuple_space_insert(TupleSpace* tuple_space, Tuple tuple);
+  ```
+
+- Metoda pozyskująca z przestrzeni krotek krotkę pasującą do wzorca `tuple_template`. Jeśli pasuje więcej niż jedna, zwrócona będzie arbitralnie wybrana z nich.
+  ```c
+TupleSpaceOperationResult tuple_space_get(
+    TupleSpace* tuple_space, 
+    Tuple const* tuple_template, 
+    TupleSpaceOperationBlockingMode blocking_mode, 
+    TupleSpaceOperationRemovePolicy remove_policy
+);
+  ```
+
+  Parametr `blocking_mode` określa, czy funkcja zablokuje wywołujący ją wątek, gdy w przestrzeni nie będzie krotki pasującej do wzorca. Zdefiniowane są następujące wartości, które oznaczają odpowiednio operację blokująca i nieblokującą:
+  ```c
+typedef enum TupleSpaceOperationBlockingMode {
+    tuple_space_blocking, 
+    tuple_space_nonblocking,
+} TupleSpaceOperationBlockingMode;
+  ```
+  
+  Parametr `remove_policy` określa czy w przypadku udanej operacji wybrana krotka ma zostać usunięta z przestrzeni krotek. Zdefiniowane są następujące wartości, które kolejno odpowiadają usunięciu krotki z przestrzeni i pozostawieniu jej:
+  ```c
+typedef enum TupleSpaceOperationRemovePolicy {
+    tuple_space_remove, 
+    tuple_space_keep,
+} TupleSpaceOperationRemovePolicy;
+  ```
+
+  Metoda `tuple_space_get()` zwraca obiekt typu `TupleSpaceOperationResult`:
+  ```c
+typedef struct TupleSpaceOperationResult {
+    TupleSpaceOperationStatus status;
+    Tuple tuple;
+} TupleSpaceOperationResult;
+  ```
+
+  Pole `status` oznacza odpowiednio powodzenie lub niepowodzenie operacji. W przypadku operacji blokującej, będzie to zawsze `tuple_space_success`, ponieważ metoda nie zakończy się, aż w przestrzeni będzie krotka pasująca do wzorca. W przypadku operacji nieblokującej, w sytuacji, gdy w przestrzeni nie ma odpowiedniej krotki, pole to ustawiane jest na `tuple_space_failure`.
+  ```c
+typedef enum TupleSpaceOperationStatus {
+    tuple_space_success, 
+    tuple_space_failure,
+} TupleSpaceOperationStatus;
+  ```
+
+  Pole `tuple` to wynikowa krotka. W przypadku niepowodzenia operacji nieblokującej będzie to zawsze pusta (0-elementowa) krotka.
+
+  - Metoda konwertująca `TupleSpace` do postaci tekstowej:
+  ```c
+char const* tuple_space_to_string(TupleSpace const* tuple_space);
+  ```
+  Wynikowy string jest poprawny tylko do momentu kolejnego wywołania tej metody z tego samego wątku. Aby zachować go na dłużej należy wykonać kopię.
+
+
+Struktura `TupleSpace` i jej wszystkie metody są thread-safe (można je wykonywać współbieżnie), ponieważ według pierwotnego pomysłu serwer miał być zaimplementowany wielowątkowo, co jednak nie okazało się konieczne.
+
 
 = Serwer
+
+
 
 
 = Aplikacja 1.
