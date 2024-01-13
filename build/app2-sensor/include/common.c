@@ -43,7 +43,7 @@ bool is_le() {
 char const* formatted_timestamp() {
     static char buffer[16];
 
-    snprintf(buffer, sizeof(buffer), "[%d]", (int)ZsutMillis());
+    snprintf(buffer, sizeof(buffer), "[%ld]", (long int)ZsutMillis());
 
     return buffer;
 }

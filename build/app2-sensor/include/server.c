@@ -53,7 +53,7 @@ void server_free(Server server) {
 void server_run(Server* server) {
     printf("%s Ready\n", formatted_timestamp());
 
-    for(int TODO = 0; TODO < 120; ++TODO) {
+    for (;;) {
         InboundMessage inbound_message = network_receive_message_blocking(&server->network);
 
         server_handle_inbound_message_nonblocking(server, inbound_message);
