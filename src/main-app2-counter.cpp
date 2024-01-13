@@ -8,8 +8,6 @@
 #include "network.c"
 #include "consts.h"
 
-#define LED     ZSUT_PIN_D2
-
 
 unsigned receive_state_change(Network* network, ArduinoNetworkAddress server_address) {
     Tuple tuple = {

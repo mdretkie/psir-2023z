@@ -20,8 +20,6 @@
 
 #pagebreak()
 
-#set heading(numbering: "1.1")
-
 #outline(
   indent: true,
   depth: 3
@@ -30,6 +28,28 @@
 #pagebreak()
 #set page(numbering: "1")
 
+#set heading(numbering: none)
+
+= Wstęp
+
+Kompilacja serwera i wszystkich aplikacji:
+```sh
+./build-all.sh
+```
+
+Uruchomienie serwera i każdej z aplikacji (w przypadku błędów należy w pliku `run.sh` zmienić adres IP z `10.0.2.15` na właściwy dla naszego interfejsu):
+```sh
+./run.sh server
+./run.sh app1-master
+./run.sh app1-worker
+./run.sh app1-sensor
+./run.sh app1-counter
+```
+
+
+#pagebreak()
+
+#set heading(numbering: "1.1")
 
 = Protokół aplikacyjny
 
@@ -279,7 +299,7 @@ void create_task(
     Network* network, 
     ArduinoNetworkAddress server_address, 
     int32_t number
-)
+);
   ```
 
 - stworzenie i wysłanie do serwera zapytania o krotki wynikowe, gdzie parametr `query` przyjmuje wartości `"prime"` lub `"not prime"`, zgodnie z tym, co generują workery.
@@ -288,7 +308,7 @@ void send_query_message(
     Network* network, 
     ArduinoNetworkAddress server_address, 
     char const* query
-)
+);
   ```
 
 - inicjalizacja połączenia z serwerem, zlecenie generowania zadań i zbierania wyników, oraz zwolnienie zasobów po zakończeniu:
@@ -329,9 +349,78 @@ Przykład wykonania (niektóre linie zostały wycięte i zastąpione `...` dla s
 #pagebreak()
 = Aplikacja 2.
 
+Podobnie jak aplikacja 1, aplikacja 2 podzielona jest na dwa procesy: *sensor*, który wykrywa zmiany stanu na pinie GPIO i przy każdej zmianie wysyła krotkę postaci `("app2", "state change", 0)` lub `("app2", "state change", 1)` do przestrzeni krotek w zależności od nowego stanu pinu.
 
+Implementacja sensora podzielona jest na funkcje:
+- odczyt stanu pinu (w naszej implementacji jest to `ZSUT_PIN_D13`):
+  ```c
+unsigned read_pin();
+  ```
 
+- wysłanie żądania wstawienia krotki informującej o zmianie stanu pinu do przestrzeni:
+  ```c
+void send_state_change(
+    Network* network, 
+    ArduinoNetworkAddress server_address, 
+    unsigned new_state
+);
+  ```
+
+- inicjalizacja sieci, cykliczne sprawdzanie czy stan pinu uległ zmianie i reakcja na zmiany poprzez wysłanie odpowiedniej wiadomości, oraz zwolnienie zasobów na końcu programu:
+  ```c
+void setup();
+  ```
+
+Proces *counter* w pętli zbiera krotki generowane przez wszystkie sensory i cyklicznie wypisuje liczbę zmian stanu z 0 na 1 i z 1 na 0.
+
+Implementacja countera podzielona jest na funkcje:
+- blokujące oczekiwanie na nową krotkę w przestrzeni informującą o zmianie stanu. Szukamy krotek według wzorca `("app2", "state change", int?)`.
+  ```c
+unsigned receive_state_change(
+    Network* network, 
+    ArduinoNetworkAddress server_address
+);
+  ```
+
+- inicjalizacja sieci, oczekiwanie w pętli na informacje o zmianie stanu oraz wypisywanie liczby zmian na port szeregowy, zwolnienie zasobów:
+  ```c
+void setup();
+  ```
+
+Przykład wykonania:
+- sensor:
+  ```
+[2051] Pin state change: 0 -> 1
+[4037] Pin state change: 1 -> 0
+[5993] Pin state change: 0 -> 1
+[7852] Pin state change: 1 -> 0
+[9754] Pin state change: 0 -> 1
+  ```
+
+- counter:
+  ```
+[11882] Changes from 0 to 1: 1. Changes from 1 to 0: 0.
+[13857] Changes from 0 to 1: 1. Changes from 1 to 0: 1.
+[15815] Changes from 0 to 1: 2. Changes from 1 to 0: 1.
+[17673] Changes from 0 to 1: 2. Changes from 1 to 0: 2.
+[19592] Changes from 0 to 1: 3. Changes from 1 to 0: 2.
+  ```
 
 
 #pagebreak()
 = Environment file dla aplikacji 2.
+
+Zadaniem tego pliku jest naprzemienne ustawianie stanu pinu `D13` na wysoki i niski. Ma on więc następujący format (załączony jest sam początek pliku, ponieważ w sumie zdefiniowane jest 1000 przełączeń stanu pinu; dalsza część wygląda analogicznie):
+
+```
++ sensor,status,D13
+
+: 0, sensor, 0
+: 10000000, sensor, 1
+: 20000000, sensor, 0
+: 30000000, sensor, 1
+: 40000000, sensor, 0
+: 50000000, sensor, 1
+
+```
+
