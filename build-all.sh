@@ -3,7 +3,7 @@ set -euo pipefail
 
 ROOT_DIR="$(dirname ${BASH_SOURCE[0]})"
 
-# rm -rf "${ROOT_DIR}"/build
+rm -rf "${ROOT_DIR}"/build
 mkdir -p "${ROOT_DIR}"/build/{server,app1-master,app1-worker,app2-sensor,app2-counter}
 
 echo "Building server"
